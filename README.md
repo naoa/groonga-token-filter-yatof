@@ -14,6 +14,13 @@ export GRN_YATOF_MAX_TOKEN_LENGTH=16
 env
 ```
 
+### ``TokenFilterMinLength``
+
+検索時、追加時の両方で3バイト未満のトークンを除去します。
+頻出しやすい短い単語を除去することで検索速度の劣化を抑制することができます。
+
+環境変数``GRN_YATOF_MIN_TOKEN_LENGTH``でバイト数を変更することができます。
+
 ## Install
 
 Install ``groonga-token-filter-yatof`` package:
