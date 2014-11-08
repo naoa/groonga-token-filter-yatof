@@ -38,6 +38,10 @@ Groongaのデフォルトでは131071で捨てられます。
 
 検索時、追加時の両方で記号のみのトークンを除去します。  
 
+### ``TokenFilterDigit``
+
+検索時、追加時の両方で数字のみのトークンを除去します。  
+
 ## Install
 
 Install ``groonga-token-filter-yatof`` package:
