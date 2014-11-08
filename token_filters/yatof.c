@@ -16,7 +16,9 @@
 */
 
 #include <groonga/token_filter.h>
+#include <groonga/nfkc.h>
 
+#include <string.h>
 #include <stdlib.h>
 
 #ifdef __GNUC__
@@ -105,6 +107,55 @@ min_length_filter(grn_ctx *ctx,
     status |= GRN_TOKENIZER_TOKEN_SKIP;
     grn_token_set_status(ctx, next_token, status);
   }
+}
+
+static void
+prolong_filter(grn_ctx *ctx,
+                  grn_token *current_token,
+                  grn_token *next_token,
+                  GNUC_UNUSED void *user_data)
+{
+#define CUT_PROLONG_LENGTH 4
+
+  grn_obj *data;
+  int token_size = 0;
+  grn_bool is_katakana = GRN_TRUE;
+
+  data = grn_token_get_data(ctx, current_token);
+
+  {
+    int char_length;
+    int rest_length = GRN_TEXT_LEN(data);
+    const char *rest = GRN_TEXT_VALUE(data);
+
+    while (rest_length > 0) {
+      grn_char_type type;
+      grn_encoding encoding = ctx->encoding;
+      //todo: should detect table encoding
+      char_length = grn_plugin_charlen(ctx, rest, rest_length, encoding);
+      if (char_length == 0) {
+        break;
+      }
+      type = grn_nfkc_char_type((unsigned char *)rest);
+      if (type != GRN_CHAR_KATAKANA) {
+        is_katakana = GRN_FALSE;
+        break;
+      }
+      token_size++;
+      rest += char_length;
+      rest_length -= char_length;
+    }
+  }
+  if (is_katakana && token_size >= CUT_PROLONG_LENGTH) {
+    const char *last = GRN_TEXT_VALUE(data);
+    last += GRN_TEXT_LEN(data) - 3;
+    if (!memcmp("ー", last, 3) || !memcmp("ｰ", last, 3)) {
+      grn_token_set_data(ctx, next_token,
+                         GRN_TEXT_VALUE(data),
+                         GRN_TEXT_LEN(data) - 3);
+    }
+  }
+#undef CUT_PROLONG_LENGTH
 }
 
 typedef struct {
@@ -221,6 +272,12 @@ GRN_PLUGIN_REGISTER(grn_ctx *ctx)
                                  tf_limit_init,
                                  tf_limit_filter,
                                  tf_limit_fin);
+
+  rc = grn_token_filter_register(ctx,
+                                 "TokenFilterProlong", -1,
+                                 yatof_init,
+                                 prolong_filter,
+                                 yatof_fin);
   return rc;
 }
 

@@ -1,0 +1,32 @@
+register token_filters/yatof
+[[0,0.0,0.0],true]
+tokenize TokenDelimit   "フリーザー カー ブザー ﾃﾞｰﾀｰ がーたー"   --normalizer NormalizerAuto   --token_filters TokenFilterProlong
+[
+  [
+    0,
+    0.0,
+    0.0
+  ],
+  [
+    {
+      "value": "フリーザ",
+      "position": 0
+    },
+    {
+      "value": "カー",
+      "position": 1
+    },
+    {
+      "value": "ブザー",
+      "position": 2
+    },
+    {
+      "value": "データ",
+      "position": 3
+    },
+    {
+      "value": "がーたー",
+      "position": 4
+    }
+  ]
+]

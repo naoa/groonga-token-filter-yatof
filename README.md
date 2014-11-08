@@ -29,6 +29,11 @@ Groongaのデフォルトでは131071で捨てられます。
 
 環境変数``GRN_YATOF_TOKEN_LIMIT``で最大トークン数を変更することができます。
 
+### ``TokenFilterProlong``
+
+検索時、追加時の両方で4文字以上のカタカナのみのトークンの末尾の長音記号を除去します。  
+例：データー → データ
+
 ## Install
 
 Install ``groonga-token-filter-yatof`` package:
