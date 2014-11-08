@@ -69,9 +69,10 @@ max_length_filter(grn_ctx *ctx,
                   grn_token *next_token,
                   GNUC_UNUSED void *user_data)
 {
+#define DEFAULT_MAX_LENGTH 64
   grn_obj *data;
   grn_tokenizer_status status;
-  int max_length_in_bytes = 64;
+  int max_length_in_bytes = DEFAULT_MAX_LENGTH;
   const char *max_length_env;
   data = grn_token_get_data(ctx, current_token);
 
@@ -84,6 +85,7 @@ max_length_filter(grn_ctx *ctx,
     status |= GRN_TOKENIZER_TOKEN_SKIP;
     grn_token_set_status(ctx, next_token, status);
   }
+#undef DEFAULT_MAX_LENGTH
 }
 
 static void
@@ -93,8 +95,9 @@ min_length_filter(grn_ctx *ctx,
                   GNUC_UNUSED void *user_data)
 {
   grn_obj *data;
+#define DEFAULT_MIN_LENGTH 3
   grn_tokenizer_status status;
-  int min_length_in_bytes = 3;
+  int min_length_in_bytes = DEFAULT_MIN_LENGTH;
   const char *min_length_env;
   data = grn_token_get_data(ctx, current_token);
 
@@ -107,6 +110,7 @@ min_length_filter(grn_ctx *ctx,
     status |= GRN_TOKENIZER_TOKEN_SKIP;
     grn_token_set_status(ctx, next_token, status);
   }
+#undef DEFAULT_MIN_LENGTH
 }
 
 static void
@@ -199,10 +203,11 @@ tf_limit_filter(grn_ctx *ctx,
                 grn_token *next_token,
                 void *user_data)
 {
+#define DEFAULT_TF_LIMIT 65535
   grn_tf_limit_token_filter *token_filter = user_data;
   grn_obj *data;
   grn_tokenizer_status status;
-  unsigned int tf_limit = 65535;
+  unsigned int tf_limit = DEFAULT_TF_LIMIT;
   const char *tf_limit_env;
   data = grn_token_get_data(ctx, current_token);
 
@@ -227,6 +232,7 @@ tf_limit_filter(grn_ctx *ctx,
     status |= GRN_TOKENIZER_TOKEN_SKIP;
     grn_token_set_status(ctx, next_token, status);
   }
+#undef DEFAULT_TF_LIMIT
 }
 
 static void
