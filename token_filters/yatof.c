@@ -107,6 +107,92 @@ min_length_filter(grn_ctx *ctx,
   }
 }
 
+typedef struct {
+  grn_tokenizer_token token;
+  grn_obj *table;
+  grn_obj value;
+} grn_tf_limit_token_filter;
+
+static void *
+tf_limit_init(grn_ctx *ctx, GNUC_UNUSED grn_obj *table, GNUC_UNUSED grn_token_mode mode)
+{
+  grn_tf_limit_token_filter *token_filter;
+
+  token_filter = GRN_PLUGIN_MALLOC(ctx, sizeof(grn_tf_limit_token_filter));
+  if (!token_filter) {
+    GRN_PLUGIN_ERROR(ctx, GRN_NO_MEMORY_AVAILABLE,
+                     "[token-filter][tf-limit] "
+                     "failed to allocate grn_tf_limit_token_filter");
+    return NULL;
+  }
+  token_filter->table = grn_table_create(ctx, NULL, 0, NULL,
+                                         GRN_OBJ_TABLE_HASH_KEY,
+                                         grn_ctx_at(ctx, GRN_DB_SHORT_TEXT),
+                                         grn_ctx_at(ctx, GRN_DB_UINT32));
+  if (!token_filter->table) {
+    GRN_PLUGIN_ERROR(ctx, GRN_NO_MEMORY_AVAILABLE,
+                     "[token-filter][tf-limit] "
+                     "couldn't create a table");
+    return NULL;
+  }
+
+  GRN_UINT32_INIT(&(token_filter->value), 0);
+  grn_tokenizer_token_init(ctx, &(token_filter->token));
+
+  return token_filter;
+}
+
+static void
+tf_limit_filter(grn_ctx *ctx,
+                grn_token *current_token,
+                grn_token *next_token,
+                void *user_data)
+{
+  grn_tf_limit_token_filter *token_filter = user_data;
+  grn_obj *data;
+  grn_tokenizer_status status;
+  unsigned int tf_limit = 65535;
+  const char *tf_limit_env;
+  data = grn_token_get_data(ctx, current_token);
+
+  tf_limit_env = getenv("GRN_YATOF_TOKEN_LIMIT");
+  if (tf_limit_env) {
+    tf_limit = atoi(tf_limit_env);
+  }
+
+  {
+    grn_id id;
+    id = grn_table_add(ctx, token_filter->table,
+                       GRN_TEXT_VALUE(data), GRN_TEXT_LEN(data), NULL);
+    if (id) {
+      GRN_BULK_REWIND(&(token_filter->value));
+      grn_obj_get_value(ctx, token_filter->table, id, &(token_filter->value));
+      GRN_UINT32_SET(ctx, &(token_filter->value), GRN_UINT32_VALUE(&(token_filter->value)) + 1);
+      grn_obj_set_value(ctx, token_filter->table, id, &(token_filter->value), GRN_OBJ_SET);
+    }
+  }
+  if (GRN_UINT32_VALUE(&(token_filter->value)) > tf_limit) {
+    status = grn_token_get_status(ctx, current_token);
+    status |= GRN_TOKENIZER_TOKEN_SKIP;
+    grn_token_set_status(ctx, next_token, status);
+  }
+}
+
+static void
+tf_limit_fin(grn_ctx *ctx, void *user_data)
+{
+  grn_tf_limit_token_filter *token_filter = user_data;
+  if (!token_filter) {
+    return;
+  }
+  if (token_filter->table) {
+    grn_obj_unlink(ctx, token_filter->table);
+  }
+  grn_obj_unlink(ctx, &(token_filter->value));
+  grn_tokenizer_token_fin(ctx, &(token_filter->token));
+  GRN_PLUGIN_FREE(ctx, token_filter);
+}
+
 grn_rc
 GRN_PLUGIN_INIT(grn_ctx *ctx)
 {
@@ -129,6 +215,12 @@ GRN_PLUGIN_REGISTER(grn_ctx *ctx)
                                  yatof_init,
                                  min_length_filter,
                                  yatof_fin);
+
+  rc = grn_token_filter_register(ctx,
+                                 "TokenFilterTFLimit", -1,
+                                 tf_limit_init,
+                                 tf_limit_filter,
+                                 tf_limit_fin);
   return rc;
 }
 
