@@ -84,6 +84,29 @@ max_length_filter(grn_ctx *ctx,
   }
 }
 
+static void
+min_length_filter(grn_ctx *ctx,
+                  grn_token *current_token,
+                  grn_token *next_token,
+                  GNUC_UNUSED void *user_data)
+{
+  grn_obj *data;
+  grn_tokenizer_status status;
+  int min_length_in_bytes = 3;
+  const char *min_length_env;
+  data = grn_token_get_data(ctx, current_token);
+
+  min_length_env = getenv("GRN_YATOF_MIN_TOKEN_LENGTH");
+  if (min_length_env) {
+    min_length_in_bytes = atoi(min_length_env);
+  }
+  if (GRN_TEXT_LEN(data) < min_length_in_bytes) {
+    status = grn_token_get_status(ctx, current_token);
+    status |= GRN_TOKENIZER_TOKEN_SKIP;
+    grn_token_set_status(ctx, next_token, status);
+  }
+}
+
 grn_rc
 GRN_PLUGIN_INIT(grn_ctx *ctx)
 {
@@ -101,6 +124,11 @@ GRN_PLUGIN_REGISTER(grn_ctx *ctx)
                                  max_length_filter,
                                  yatof_fin);
 
+  rc = grn_token_filter_register(ctx,
+                                 "TokenFilterMinLength", -1,
+                                 yatof_init,
+                                 min_length_filter,
+                                 yatof_fin);
   return rc;
 }
 

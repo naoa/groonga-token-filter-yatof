@@ -1,0 +1,6 @@
+register token_filters/yatof
+
+tokenize TokenBigram \
+  "abc de" \
+  --normalizer NormalizerAuto \
+  --token_filters TokenFilterMinLength
