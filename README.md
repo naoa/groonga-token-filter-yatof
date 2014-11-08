@@ -34,6 +34,10 @@ Groongaのデフォルトでは131071で捨てられます。
 検索時、追加時の両方で4文字以上の全角カタカナのみのトークンの末尾の長音記号を除去します。  
 例：データー → データ
 
+### ``TokenFilterSymbol``
+
+検索時、追加時の両方で記号のみのトークンを除去します。  
+
 ## Install
 
 Install ``groonga-token-filter-yatof`` package:

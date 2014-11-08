@@ -162,6 +162,49 @@ prolong_filter(grn_ctx *ctx,
 #undef CUT_PROLONG_LENGTH
 }
 
+static void
+symbol_filter(grn_ctx *ctx,
+              grn_token *current_token,
+              grn_token *next_token,
+              GNUC_UNUSED void *user_data)
+{
+  grn_obj *data;
+  grn_tokenizer_status status;
+  int token_size = 0;
+  grn_bool is_symbol = GRN_TRUE;
+
+  data = grn_token_get_data(ctx, current_token);
+
+  {
+    int char_length;
+    int rest_length = GRN_TEXT_LEN(data);
+    const char *rest = GRN_TEXT_VALUE(data);
+
+    while (rest_length > 0) {
+      grn_char_type type;
+      grn_encoding encoding = ctx->encoding;
+      //todo: should detect table encoding
+      char_length = grn_plugin_charlen(ctx, rest, rest_length, encoding);
+      if (char_length == 0) {
+        break;
+      }
+      type = grn_nfkc_char_type((unsigned char *)rest);
+      if (type != GRN_CHAR_SYMBOL) {
+        is_symbol = GRN_FALSE;
+        break;
+      }
+      token_size++;
+      rest += char_length;
+      rest_length -= char_length;
+    }
+  }
+  if (is_symbol) {
+    status = grn_token_get_status(ctx, current_token);
+    status |= GRN_TOKENIZER_TOKEN_SKIP;
+    grn_token_set_status(ctx, next_token, status);
+  }
+}
+
 typedef struct {
   grn_tokenizer_token token;
   grn_obj *table;
@@ -283,6 +326,12 @@ GRN_PLUGIN_REGISTER(grn_ctx *ctx)
                                  "TokenFilterProlong", -1,
                                  yatof_init,
                                  prolong_filter,
+                                 yatof_fin);
+
+  rc = grn_token_filter_register(ctx,
+                                 "TokenFilterSymbol", -1,
+                                 yatof_init,
+                                 symbol_filter,
                                  yatof_fin);
   return rc;
 }
