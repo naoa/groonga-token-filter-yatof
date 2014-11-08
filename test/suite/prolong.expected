@@ -1,6 +1,6 @@
 register token_filters/yatof
 [[0,0.0,0.0],true]
-tokenize TokenDelimit   "フリーザー カー ブザー ﾃﾞｰﾀｰ がーたー"   --normalizer NormalizerAuto   --token_filters TokenFilterProlong
+tokenize TokenDelimit   "フリーザー カー ブザー ﾃﾞｰﾀｰ がーたー"   --token_filters TokenFilterProlong
 [
   [
     0,
@@ -21,7 +21,7 @@ tokenize TokenDelimit   "フリーザー カー ブザー ﾃﾞｰﾀｰ がー
       "position": 2
     },
     {
-      "value": "データ",
+      "value": "ﾃﾞｰﾀｰ",
       "position": 3
     },
     {

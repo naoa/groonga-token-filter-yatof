@@ -149,7 +149,7 @@ prolong_filter(grn_ctx *ctx,
   if (is_katakana && token_size >= CUT_PROLONG_LENGTH) {
     const char *last = GRN_TEXT_VALUE(data);
     last += GRN_TEXT_LEN(data) - 3;
-    if (!memcmp("ー", last, 3) || !memcmp("ｰ", last, 3)) {
+    if (!memcmp("ー", last, 3)) {
       grn_token_set_data(ctx, next_token,
                          GRN_TEXT_VALUE(data),
                          GRN_TEXT_LEN(data) - 3);

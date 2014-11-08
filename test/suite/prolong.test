@@ -2,5 +2,4 @@ register token_filters/yatof
 
 tokenize TokenDelimit \
   "フリーザー カー ブザー ﾃﾞｰﾀｰ がーたー" \
-  --normalizer NormalizerAuto \
   --token_filters TokenFilterProlong
