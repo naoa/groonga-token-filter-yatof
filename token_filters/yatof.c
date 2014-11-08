@@ -115,9 +115,9 @@ min_length_filter(grn_ctx *ctx,
 
 static void
 prolong_filter(grn_ctx *ctx,
-                  grn_token *current_token,
-                  grn_token *next_token,
-                  GNUC_UNUSED void *user_data)
+               grn_token *current_token,
+               grn_token *next_token,
+               GNUC_UNUSED void *user_data)
 {
 #define CUT_PROLONG_LENGTH 4
 
