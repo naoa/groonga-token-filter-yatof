@@ -1,0 +1,4 @@
+register token_filters/yatof
+[[0,0.0,0.0],true]
+tokenize TokenBigram   "abcde abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"   --normalizer NormalizerAuto   --token_filters TokenFilterMaxLength
+[[0,0.0,0.0],[{"value":"abcde","position":0}]]

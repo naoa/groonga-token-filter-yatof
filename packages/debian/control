@@ -1,0 +1,20 @@
+Source: groonga-token-filter-yatof
+Section: libs
+Priority: optional
+Maintainer: Naoya Murakami <naoya@createfield.com>
+Build-Depends:
+  debhelper (>= 9),
+  autotools-dev
+Standards-Version: 3.9.5
+Homepage: https://github.com/naoa/groonga-token-filter-yatof/
+
+Package: groonga-token-filter-yatof
+Section: libs
+Architecture: any
+Depends:
+  ${misc:Depends},
+  ${shlibs:Depends},
+  libgroonga-dev (>= 4.0.7)
+Description: Yet another token filter plugin for Groonga
+ This package provides yet anoter token filter plugin.
+

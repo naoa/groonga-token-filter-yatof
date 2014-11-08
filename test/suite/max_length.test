@@ -1,0 +1,6 @@
+register token_filters/yatof
+
+tokenize TokenBigram \
+  "abcde abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" \
+  --normalizer NormalizerAuto \
+  --token_filters TokenFilterMaxLength

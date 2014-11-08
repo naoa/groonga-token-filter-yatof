@@ -1,0 +1,5 @@
+plugin_name=token_filters/yatof
+
+Name: groonga-token-filter-yatof
+Description: Yet anoter token filter plugin for Groonga
+Version: @VERSION@
