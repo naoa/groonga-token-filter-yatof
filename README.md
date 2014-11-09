@@ -32,7 +32,31 @@ Groongaのデフォルトでは131071で捨てられます。
 ### ``TokenFilterProlong``
 
 検索時、追加時の両方で4文字以上の全角カタカナのみのトークンの末尾の長音記号を除去します。  
-例：データー → データ
+
+```bash
+tokenize TokenDelimit   "フリーザー カー ブザー"   --token_filters TokenFilterProlong
+[
+  [
+    0,
+    0.0,
+    0.0
+  ],
+  [
+    {
+      "value": "フリーザ",
+      "position": 0
+    },
+    {
+      "value": "カー",
+      "position": 1
+    },
+    {
+      "value": "ブザー",
+      "position": 2
+    }
+  ]
+]
+```
 
 ### ``TokenFilterSymbol``
 
