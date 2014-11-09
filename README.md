@@ -44,7 +44,7 @@ Groongaのデフォルトでは131071で捨てられます。
 
 ### ``TokenFilterIgnoreWord``
 
-検索時、追加時の両方でテーブルのキーと一致するトークンを無視します。無視されたトークンは、ないものとみなされ、そのトークンを取り除いたフレーズでもヒットするようになります。たとえば、以下の例では、"Hello World"でもヒットします。
+検索時、追加時の両方でテーブルのキーと一致するトークンを無視します。無視されたトークンは、positionを進めません。すなわち、無視されたトークンはないものとみなされ、そのトークンを取り除いたフレーズでもヒットするようになります。たとえば、以下の例では、"Hello World"でもヒットします。Ngramトークナイザーの場合、誤ヒットにつながりやすいため、注意が必要です。
 あらかじめ除外対象の語句が格納されたテーブル``#ignore_words``を作る必要があります。  
 整合性を保つため、除外対象の語句を追加した場合は、インデックス再構築が必要です。  
 
@@ -58,6 +58,25 @@ load --table #ignore_words
 [[0,0.0,0.0],1]
 tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_filters TokenFilterIgnoreWord
 [[0,0.0,0.0],[{"value":"hello","position":0},{"value":"world","position":1}]]
+```
+
+### ``TokenFilterRemoveWord``
+
+検索時、追加時の両方でテーブルのキーと一致するトークンを除去します。除去されたトークンは、postionを進めます。すなわち、除去されたトークンは、他の除去トークンと同一視されるようになります。たとえば、以下の例では、"Hello and World"は、"Hello or World"でもヒットしますが、"Hello World"ではヒットしません。
+あらかじめ除外対象の語句が格納されたテーブル``#remove_words``を作る必要があります。
+整合性を保つため、除外対象の語句を追加した場合は、インデックス再構築が必要です。
+
+```bash
+table_create #remove_words TABLE_HASH_KEY ShortText
+[[0,0.0,0.0],true]
+load --table #remove_words
+[
+{"_key": "and"},
+{"_key": "or"}
+]
+[[0,0.0,0.0],2]
+tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_filters TokenFilterRemoveWord
+[[0,0.0,0.0],[{"value":"hello","position":0},{"value":"world","position":2}]]
 ```
 
 ## Install

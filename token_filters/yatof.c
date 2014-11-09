@@ -421,6 +421,93 @@ ignore_word_fin(grn_ctx *ctx, void *user_data)
   GRN_PLUGIN_FREE(ctx, token_filter);
 }
 
+#define REMOVE_WORD_TABLE_NAME "#remove_words"
+#define REMOVE_WORD_TABLE_NAME_MRN "@0023remove_words"
+
+typedef struct {
+  grn_tokenizer_token token;
+  grn_obj *table;
+  grn_obj value;
+} grn_remove_word_token_filter;
+
+static void *
+remove_word_init(grn_ctx *ctx, GNUC_UNUSED grn_obj *table, GNUC_UNUSED grn_token_mode mode)
+{
+  grn_remove_word_token_filter *token_filter;
+  const char *remove_word_table_name_env;
+
+  token_filter = GRN_PLUGIN_MALLOC(ctx, sizeof(grn_ignore_word_token_filter));
+  if (!token_filter) {
+    GRN_PLUGIN_ERROR(ctx, GRN_NO_MEMORY_AVAILABLE,
+                     "[token-filter][remove-word] "
+                     "failed to allocate grn_remove_word_token_filter");
+    return NULL;
+  }
+  remove_word_table_name_env = getenv("GRN_YATOF_REMOVE_WORD_TABLE_NAME");
+  if (remove_word_table_name_env) {
+    token_filter->table = grn_ctx_get(ctx,
+                                      remove_word_table_name_env,
+                                      strlen(remove_word_table_name_env));
+  } else {
+    token_filter->table = grn_ctx_get(ctx,
+                                      REMOVE_WORD_TABLE_NAME,
+                                      strlen(REMOVE_WORD_TABLE_NAME));
+    if (!token_filter->table) {
+      token_filter->table = grn_ctx_get(ctx,
+                                        REMOVE_WORD_TABLE_NAME_MRN,
+                                        strlen(REMOVE_WORD_TABLE_NAME_MRN));
+    }
+  }
+  if (!token_filter->table) {
+    GRN_PLUGIN_ERROR(ctx, GRN_NO_MEMORY_AVAILABLE,
+                     "[token-filter][remove-word] "
+                     "couldn't open a table");
+    GRN_PLUGIN_FREE(ctx, token_filter);
+    return NULL;
+  }
+
+  grn_tokenizer_token_init(ctx, &(token_filter->token));
+
+  return token_filter;
+}
+
+static void
+remove_word_filter(grn_ctx *ctx,
+                   grn_token *current_token,
+                   grn_token *next_token,
+                   void *user_data)
+{
+  grn_remove_word_token_filter *token_filter = user_data;
+  grn_obj *data;
+  grn_tokenizer_status status;
+  data = grn_token_get_data(ctx, current_token);
+
+  {
+    grn_id id;
+    id = grn_table_get(ctx, token_filter->table,
+                       GRN_TEXT_VALUE(data), GRN_TEXT_LEN(data));
+    if (id != GRN_ID_NIL) {
+      status = grn_token_get_status(ctx, current_token);
+      status |= GRN_TOKENIZER_TOKEN_SKIP;
+      grn_token_set_status(ctx, next_token, status);
+    }
+  }
+}
+
+static void
+remove_word_fin(grn_ctx *ctx, void *user_data)
+{
+  grn_remove_word_token_filter *token_filter = user_data;
+  if (!token_filter) {
+    return;
+  }
+  if (token_filter->table) {
+    grn_obj_unlink(ctx, token_filter->table);
+  }
+  grn_tokenizer_token_fin(ctx, &(token_filter->token));
+  GRN_PLUGIN_FREE(ctx, token_filter);
+}
+
 grn_rc
 GRN_PLUGIN_INIT(grn_ctx *ctx)
 {
@@ -474,6 +561,11 @@ GRN_PLUGIN_REGISTER(grn_ctx *ctx)
                                  ignore_word_filter,
                                  ignore_word_fin);
 
+  rc = grn_token_filter_register(ctx,
+                                 "TokenFilterRemoveWord", -1,
+                                 remove_word_init,
+                                 remove_word_filter,
+                                 remove_word_fin);
   return rc;
 }
 
