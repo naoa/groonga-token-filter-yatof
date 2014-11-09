@@ -42,6 +42,24 @@ Groongaのデフォルトでは131071で捨てられます。
 
 検索時、追加時の両方で数字のみのトークンを除去します。  
 
+### ``TokenFilterIgnoreWord``
+
+検索時、追加時の両方でテーブルのキーと一致するトークンを無視します。無視されたトークンは、ないものとみなされ、そのトークンを取り除いたフレーズでもヒットするようになります。たとえば、以下の例では、"Hello World"でもヒットします。
+あらかじめ除外対象の語句が格納されたテーブル``#ignore_words``を作る必要があります。  
+整合性を保つため、除外対象の語句を追加した場合は、インデックス再構築が必要です。  
+
+```bash
+table_create #ignore_words TABLE_HASH_KEY ShortText
+[[0,0.0,0.0],true]
+load --table #ignore_words
+[
+{"_key": "and"}
+]
+[[0,0.0,0.0],1]
+tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_filters TokenFilterIgnoreWord
+[[0,0.0,0.0],[{"value":"hello","position":0},{"value":"world","position":1}]]
+```
+
 ## Install
 
 Install ``groonga-token-filter-yatof`` package:

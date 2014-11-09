@@ -1,0 +1,12 @@
+register token_filters/yatof
+
+table_create #ignore_words TABLE_HASH_KEY ShortText
+load --table #ignore_words
+[
+{"_key": "and"}
+]
+
+tokenize TokenBigram "Hello and World" \
+  --normalizer NormalizerAuto \
+  --token_filters TokenFilterIgnoreWord
+
