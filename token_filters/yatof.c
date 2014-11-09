@@ -295,7 +295,7 @@ tf_limit_filter(grn_ctx *ctx,
   const char *tf_limit_env;
   data = grn_token_get_data(ctx, current_token);
 
-  tf_limit_env = getenv("GRN_YATOF_TOKEN_LIMIT");
+  tf_limit_env = getenv("GRN_YATOF_TF_LIMIT");
   if (tf_limit_env) {
     tf_limit = atoi(tf_limit_env);
   }
