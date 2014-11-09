@@ -79,6 +79,26 @@ tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_f
 [[0,0.0,0.0],[{"value":"hello","position":0},{"value":"world","position":2}]]
 ```
 
+### ``TokenFilterSynonym``
+
+検索時、追加時の両方でテーブルのキーと一致するトークンを同義語に変換します。
+あらかじ変換対象の語句がキーに格納されたテーブル``#synonyms``と変換語の語句が格納されたカラム``synonym``を作る必要があります。  
+整合性を保つため、語句を追加した場合は、インデックス再構築が必要です。複数のワードに変換することはできません。
+
+```bash
+table_create #synonyms TABLE_HASH_KEY ShortText
+[[0,0.0,0.0],true]
+column_create #synonyms synonym COLUMN_SCALAR ShortText
+[[0,0.0,0.0],true]
+load --table #synonyms
+[
+{"_key": "senna", "synonym": "groonga"}
+]
+[[0,0.0,0.0],1]
+tokenize TokenBigram "Hello Senna"   --normalizer NormalizerAuto   --token_filters TokenFilterSynonym
+[[0,0.0,0.0],[{"value":"hello","position":0},{"value":"groonga","position":1}]]
+```
+
 ## Install
 
 Install ``groonga-token-filter-yatof`` package:

@@ -508,6 +508,113 @@ remove_word_fin(grn_ctx *ctx, void *user_data)
   GRN_PLUGIN_FREE(ctx, token_filter);
 }
 
+#define SYNONYM_TABLE_NAME "#synonyms"
+#define SYNONYM_TABLE_NAME_MRN "@0023synonyms"
+#define SYNONYM_COLUMN_NAME "synonym"
+
+typedef struct {
+  grn_tokenizer_token token;
+  grn_obj *table;
+  grn_obj *column;
+  grn_obj value;
+} grn_synonym_token_filter;
+
+static void *
+synonym_init(grn_ctx *ctx, GNUC_UNUSED grn_obj *table, GNUC_UNUSED grn_token_mode mode)
+{
+  grn_synonym_token_filter *token_filter;
+  const char *synonym_table_name_env;
+
+  token_filter = GRN_PLUGIN_MALLOC(ctx, sizeof(grn_synonym_token_filter));
+  if (!token_filter) {
+    GRN_PLUGIN_ERROR(ctx, GRN_NO_MEMORY_AVAILABLE,
+                     "[token-filter][synonym] "
+                     "failed to allocate grn_synonym_token_filter");
+    return NULL;
+  }
+  synonym_table_name_env = getenv("GRN_YATOF_SYNONYM_TABLE_NAME");
+  if (synonym_table_name_env) {
+    token_filter->table = grn_ctx_get(ctx,
+                                      synonym_table_name_env,
+                                      strlen(synonym_table_name_env));
+  } else {
+    token_filter->table = grn_ctx_get(ctx,
+                                      SYNONYM_TABLE_NAME,
+                                      strlen(SYNONYM_TABLE_NAME));
+    if (!token_filter->table) {
+      token_filter->table = grn_ctx_get(ctx,
+                                        SYNONYM_TABLE_NAME_MRN,
+                                        strlen(SYNONYM_TABLE_NAME_MRN));
+    }
+  }
+  if (!token_filter->table) {
+    GRN_PLUGIN_ERROR(ctx, GRN_NO_MEMORY_AVAILABLE,
+                     "[token-filter][synonym] "
+                     "couldn't open a table");
+    GRN_PLUGIN_FREE(ctx, token_filter);
+    return NULL;
+  } else {
+    token_filter->column = grn_obj_column(ctx,
+                                          token_filter->table,
+                                          SYNONYM_COLUMN_NAME,
+                                          strlen(SYNONYM_COLUMN_NAME));
+    if (!token_filter->column) {
+      GRN_PLUGIN_ERROR(ctx, GRN_NO_MEMORY_AVAILABLE,
+                       "[token-filter][synonym] "
+                       "couldn't open synonym column");
+      GRN_PLUGIN_FREE(ctx, token_filter);
+      return NULL;
+    }
+  }
+
+  GRN_TEXT_INIT(&(token_filter->value), 0);
+  grn_tokenizer_token_init(ctx, &(token_filter->token));
+
+  return token_filter;
+}
+
+static void
+synonym_filter(grn_ctx *ctx,
+               grn_token *current_token,
+               grn_token *next_token,
+               void *user_data)
+{
+  grn_synonym_token_filter *token_filter = user_data;
+  grn_obj *data;
+  data = grn_token_get_data(ctx, current_token);
+
+  {
+    grn_id id;
+    id = grn_table_get(ctx, token_filter->table,
+                       GRN_TEXT_VALUE(data), GRN_TEXT_LEN(data));
+    if (id != GRN_ID_NIL) {
+      GRN_BULK_REWIND(&(token_filter->value));
+      grn_obj_get_value(ctx, token_filter->column, id, &(token_filter->value));
+      grn_token_set_data(ctx, next_token,
+                         GRN_TEXT_VALUE(&(token_filter->value)),
+                         GRN_TEXT_LEN(&(token_filter->value)));
+    }
+  }
+}
+
+static void
+synonym_fin(grn_ctx *ctx, void *user_data)
+{
+  grn_synonym_token_filter *token_filter = user_data;
+  if (!token_filter) {
+    return;
+  }
+  if (token_filter->table) {
+    grn_obj_unlink(ctx, token_filter->table);
+  }
+  if (token_filter->column) {
+    grn_obj_unlink(ctx, token_filter->column);
+  }
+  grn_obj_unlink(ctx, &(token_filter->value));
+  grn_tokenizer_token_fin(ctx, &(token_filter->token));
+  GRN_PLUGIN_FREE(ctx, token_filter);
+}
+
 grn_rc
 GRN_PLUGIN_INIT(grn_ctx *ctx)
 {
@@ -566,6 +673,12 @@ GRN_PLUGIN_REGISTER(grn_ctx *ctx)
                                  remove_word_init,
                                  remove_word_filter,
                                  remove_word_fin);
+
+  rc = grn_token_filter_register(ctx,
+                                 "TokenFilterSynonym", -1,
+                                 synonym_init,
+                                 synonym_filter,
+                                 synonym_fin);
   return rc;
 }
 

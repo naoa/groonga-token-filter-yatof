@@ -1,0 +1,13 @@
+register token_filters/yatof
+
+table_create #synonyms TABLE_HASH_KEY ShortText
+column_create #synonyms synonym COLUMN_SCALAR ShortText
+load --table #synonyms
+[
+{"_key": "senna", "synonym": "groonga"}
+]
+
+tokenize TokenBigram "Hello Senna" \
+  --normalizer NormalizerAuto \
+  --token_filters TokenFilterSynonym
+
