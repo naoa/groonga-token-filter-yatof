@@ -436,7 +436,7 @@ remove_word_init(grn_ctx *ctx, GNUC_UNUSED grn_obj *table, GNUC_UNUSED grn_token
   grn_remove_word_token_filter *token_filter;
   const char *remove_word_table_name_env;
 
-  token_filter = GRN_PLUGIN_MALLOC(ctx, sizeof(grn_ignore_word_token_filter));
+  token_filter = GRN_PLUGIN_MALLOC(ctx, sizeof(grn_remove_word_token_filter));
   if (!token_filter) {
     GRN_PLUGIN_ERROR(ctx, GRN_NO_MEMORY_AVAILABLE,
                      "[token-filter][remove-word] "
