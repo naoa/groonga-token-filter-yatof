@@ -135,8 +135,6 @@ tokenize TokenBigram "Hello Senna"   --normalizer NormalizerAuto   --token_filte
 
 Install ``groonga-token-filter-yatof`` package:
 
-未作成
-
 ### CentOS
 
 * CentOS6
@@ -152,6 +150,8 @@ Install ``groonga-token-filter-yatof`` package:
 ```
 
 ### Fedora
+
+未作成
 
 * Fedora 20
 
@@ -171,20 +171,6 @@ Install ``groonga-token-filter-yatof`` package:
 
 ```
 % wget http://packages.createfield.com/debian/wheezy/groonga-token-filter-yatof_0.0.1-1_amd64.deb
-% sudo dpkg -i groonga-token-filter-yatof_0.0.1-1_amd64.deb
-```
-
-* jessie
-
-```
-% wget http://packages.createfield.com/debian/jessie/groonga-token-filter-yatof_0.0.1-1_amd64.deb
-% sudo dpkg -i groonga-token-filter-yatof_0.0.1-1_amd64.deb
-```
-
-* sid
-
-```
-% wget http://packages.createfield.com/debian/sid/groonga-token-filter-yatof_0.0.1-1_amd64.deb
 % sudo dpkg -i groonga-token-filter-yatof_0.0.1-1_amd64.deb
 ```
 
@@ -240,7 +226,7 @@ Groonga:
     > column_create Diaries body COLUMN_SCALAR TEXT
     > table_create Terms TABLE_PAT_KEY ShortText \
     >   --default_tokenizer TokenBigram
-    >   --token_filters TokenFilterMaxLength
+    >   --token_filters TokenFilterSymbol,TokenFilterDigit
     > column_create Terms diaries_body COLUMN_INDEX|WITH_POSITION Diaries body
 
 Mroonga:
@@ -251,7 +237,7 @@ Mroonga:
         -> id INT NOT NULL,
         -> body TEXT NOT NULL,
         -> PRIMARY KEY (id) USING HASH,
-        -> FULLTEXT INDEX (body) COMMENT 'token_filters "TokenFilterMaxLength"'
+        -> FULLTEXT INDEX (body) COMMENT 'token_filters "TokenFilterSymbol,TokenFilterDigit"'
         -> ) ENGINE=Mroonga DEFAULT CHARSET=utf8;
 
 Rroonga:
@@ -269,7 +255,7 @@ Rroonga:
     ?>                              :type => :patricia_trie,
     ?>                              :normalizer => :NormalizerAuto,
     ?>                              :default_tokenizer => "TokenBigram",
-    ?>                              :token_filters => "TokenFilterMaxLength") do |table|
+    ?>                              :token_filters => "TokenFilterSymbol,TokenFilterDigit") do |table|
     ?>   table.index("Diaries.body")
     >> end
     
