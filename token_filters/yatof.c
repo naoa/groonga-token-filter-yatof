@@ -134,8 +134,7 @@ prolong_filter(grn_ctx *ctx,
 
     while (rest_length > 0) {
       grn_char_type type;
-      grn_encoding encoding = ctx->encoding;
-      //todo: should detect table encoding
+      grn_encoding encoding = GRN_CTX_GET_ENCODING(ctx);
       char_length = grn_plugin_charlen(ctx, rest, rest_length, encoding);
       if (char_length == 0) {
         break;
@@ -182,8 +181,7 @@ symbol_filter(grn_ctx *ctx,
 
     while (rest_length > 0) {
       grn_char_type type;
-      grn_encoding encoding = ctx->encoding;
-      //todo: should detect table encoding
+      grn_encoding encoding = GRN_CTX_GET_ENCODING(ctx);
       char_length = grn_plugin_charlen(ctx, rest, rest_length, encoding);
       if (char_length == 0) {
         break;
@@ -225,8 +223,7 @@ digit_filter(grn_ctx *ctx,
 
     while (rest_length > 0) {
       grn_char_type type;
-      grn_encoding encoding = ctx->encoding;
-      //todo: should detect table encoding
+      grn_encoding encoding = GRN_CTX_GET_ENCODING(ctx);
       char_length = grn_plugin_charlen(ctx, rest, rest_length, encoding);
       if (char_length == 0) {
         break;
