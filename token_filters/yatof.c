@@ -274,6 +274,7 @@ tf_limit_init(grn_ctx *ctx, GNUC_UNUSED grn_obj *table, GNUC_UNUSED grn_token_mo
     GRN_PLUGIN_ERROR(ctx, GRN_NO_MEMORY_AVAILABLE,
                      "[token-filter][tf-limit] "
                      "couldn't create a table");
+    GRN_PLUGIN_FREE(ctx, token_filter);
     return NULL;
   }
 
