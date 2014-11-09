@@ -48,6 +48,8 @@ Groongaのデフォルトでは131071で捨てられます。
 あらかじめ除外対象の語句が格納されたテーブル``#ignore_words``を作る必要があります。  
 整合性を保つため、無視対象の語句を追加した場合は、インデックス再構築が必要です。
 
+環境変数``GRN_YATOF_IGNORE_WORD_TABLE_NAME``でテーブルを変更することができます。
+
 ```bash
 table_create #ignore_words TABLE_HASH_KEY ShortText
 [[0,0.0,0.0],true]
@@ -65,6 +67,8 @@ tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_f
 検索時、追加時の両方でテーブルのキーと一致するトークンを除去します。除去されたトークンは、postionを進めます。すなわち、除去されたトークンは、他の除去トークンと同一視されるようになります。たとえば、以下の例では、"Hello and World"は、"Hello or World"でもヒットしますが、"Hello World"ではヒットしません。  
 あらかじめ除外対象の語句が格納されたテーブル``#remove_words``を作る必要があります。  
 整合性を保つため、除外対象の語句を追加した場合は、インデックス再構築が必要です。
+
+環境変数``GRN_YATOF_REMOVE_WORD_TABLE_NAME``でテーブルを変更することができます。
 
 ```bash
 table_create #remove_words TABLE_HASH_KEY ShortText
@@ -84,6 +88,8 @@ tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_f
 検索時、追加時の両方でテーブルのキーと一致するトークンを同義語に変換します。
 あらかじ変換対象の語句がキーに格納されたテーブル``#synonyms``と変換語の語句が格納されたカラム``synonym``を作る必要があります。  
 整合性を保つため、語句を追加した場合は、インデックス再構築が必要です。複数のワードに変換することはできません。
+
+環境変数``GRN_YATOF_SYNONYM_TABLE_NAME``でテーブルを変更することができます。
 
 ```bash
 table_create #synonyms TABLE_HASH_KEY ShortText
