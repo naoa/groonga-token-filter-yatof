@@ -86,7 +86,7 @@ tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_f
 ### ``TokenFilterSynonym``
 
 検索時、追加時の両方でテーブルのキーと一致するトークンを同義語に変換します。
-あらかじ変換対象の語句がキーに格納されたテーブル``#synonyms``と変換語の語句が格納されたカラム``synonym``を作る必要があります。  
+あらかじめ変換対象の語句がキーに格納されたテーブル``#synonyms``と変換語の語句が格納されたカラム``synonym``を作る必要があります。  
 整合性を保つため、語句を追加した場合は、インデックス再構築が必要です。複数のワードに変換することはできません。
 
 環境変数``GRN_YATOF_SYNONYM_TABLE_NAME``でテーブルを変更することができます。
