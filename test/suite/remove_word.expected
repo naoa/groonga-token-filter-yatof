@@ -1,8 +1,8 @@
 register token_filters/yatof
 [[0,0.0,0.0],true]
-table_create #remove_words TABLE_HASH_KEY ShortText
+table_create remove_words TABLE_HASH_KEY ShortText
 [[0,0.0,0.0],true]
-load --table #remove_words
+load --table remove_words
 [
 {"_key": "and"},
 {"_key": "or"}
