@@ -70,15 +70,15 @@ tokenize TokenDelimit   "フリーザー カー ブザー"   --token_filters Tok
 ### ``TokenFilterIgnoreWord``
 
 検索時、追加時の両方でテーブルのキーと一致するトークンを無視します。無視されたトークンは、positionを進めません。すなわち、無視されたトークンはないものとみなされ、そのトークンを取り除いたフレーズでもヒットするようになります。たとえば、以下の例では、"Hello World"でもヒットします。同一視できるフレーズが増える一方、誤ヒットにつながることもあるため、注意が必要です。  
-あらかじめ除外対象の語句が格納されたテーブル``#ignore_words``を作る必要があります。  
+あらかじめ除外対象の語句が格納されたテーブル``ignore_words``を作る必要があります。  
 整合性を保つため、無視対象の語句を追加した場合は、インデックス再構築が必要です。
 
 環境変数``GRN_YATOF_IGNORE_WORD_TABLE_NAME``でテーブルを変更することができます。
 
 ```bash
-table_create #ignore_words TABLE_HASH_KEY ShortText
+table_create ignore_words TABLE_HASH_KEY ShortText
 [[0,0.0,0.0],true]
-load --table #ignore_words
+load --table ignore_words
 [
 {"_key": "and"}
 ]
@@ -97,9 +97,9 @@ Groongaにバンドルされている``TokenFilterStopWord``は検索時のみ�
 環境変数``GRN_YATOF_REMOVE_WORD_TABLE_NAME``でテーブルを変更することができます。
 
 ```bash
-table_create #remove_words TABLE_HASH_KEY ShortText
+table_create remove_words TABLE_HASH_KEY ShortText
 [[0,0.0,0.0],true]
-load --table #remove_words
+load --table remove_words
 [
 {"_key": "and"},
 {"_key": "or"}
@@ -118,11 +118,11 @@ tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_f
 環境変数``GRN_YATOF_SYNONYM_TABLE_NAME``でテーブルを変更することができます。
 
 ```bash
-table_create #synonyms TABLE_HASH_KEY ShortText
+table_create synonyms TABLE_HASH_KEY ShortText
 [[0,0.0,0.0],true]
-column_create #synonyms synonym COLUMN_SCALAR ShortText
+column_create synonyms synonym COLUMN_SCALAR ShortText
 [[0,0.0,0.0],true]
-load --table #synonyms
+load --table synonyms
 [
 {"_key": "senna", "synonym": "groonga"}
 ]
