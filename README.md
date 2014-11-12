@@ -25,10 +25,61 @@ env
 
 検索時、追加時の両方で同一文書中に含まれるトークン数が65535を超えたトークンを捨てます。  
 Groongaのデフォルトでは131071で捨てられます。  
+テーブル``tf_limit_words``とカラム``tf_limit``を作ることによりトークンごとに上限値を設定することができます。
 サイズの大きい文書において、頻出しすぎるトークンによるポスティングリストの長大化を抑制します。  
 1文書ごとにハッシュ表でトークン数を数えているため、インデックス構築速度が結構劣化するとおもいます。
 
-環境変数``GRN_YATOF_TF_LIMIT``で最大トークン数を変更することができます。
+環境変数``GRN_YATOF_TF_LIMIT``で最大トークン数を``GRN_YATOF_TF_LIMIT_WORD_TABLE_NAME``でテーブル名を変更することができます。
+
+```bash
+table_create tf_limit_words TABLE_HASH_KEY ShortText
+[[0,0.0,0.0],true]
+column_create tf_limit_words tf_limit COLUMN_SCALAR UInt32
+[[0,0.0,0.0],true]
+load --table tf_limit_words
+[
+{"_key": "a", "tf_limit": 3}
+]
+[[0,0.0,0.0],1]
+tokenize TokenBigram "a a a a b b b b"--normalizer NormalizerAuto --token_filters TokenFilterTFLimit
+[
+  [
+    0,
+    0.0,
+    0.0
+  ],
+  [
+    {
+      "value": "a",
+      "position": 0
+    },
+    {
+      "value": "a",
+      "position": 1
+    },
+    {
+      "value": "a",
+      "position": 2
+    },
+    {
+      "value": "b",
+      "position": 4
+    },
+    {
+      "value": "b",
+      "position": 5
+    },
+    {
+      "value": "b",
+      "position": 6
+    },
+    {
+      "value": "b",
+      "position": 7
+    }
+  ]
+]
+```
 
 ### ``TokenFilterProlong``
 

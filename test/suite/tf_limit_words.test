@@ -1,0 +1,10 @@
+register token_filters/yatof
+
+table_create tf_limit_words TABLE_HASH_KEY ShortText
+column_create tf_limit_words tf_limit COLUMN_SCALAR UInt32
+load --table tf_limit_words
+[
+{"_key": "a", "tf_limit": 3}
+]
+
+tokenize TokenBigram "a a a a b b b b"--normalizer NormalizerAuto --token_filters TokenFilterTFLimit

@@ -323,11 +323,17 @@ digit_filter(grn_ctx *ctx,
   }
 }
 
+#define TF_LIMIT_WORD_TABLE_NAME "tf_limit_words"
+#define TF_LIMIT_COLUMN_NAME "tf_limit"
+
 typedef struct {
   grn_tokenizer_token token;
   grn_obj *table;
   grn_obj value;
   unsigned int tf_limit;
+  grn_obj *word_table;
+  grn_obj *column;
+  grn_obj word_tf_limit;
 } grn_tf_limit_token_filter;
 
 static void *
@@ -336,6 +342,7 @@ tf_limit_init(grn_ctx *ctx, GNUC_UNUSED grn_obj *table, GNUC_UNUSED grn_token_mo
 #define DEFAULT_TF_LIMIT 65535
   grn_tf_limit_token_filter *token_filter;
   const char *tf_limit_env;
+  const char *tf_limit_word_table_name_env;
 
   token_filter = GRN_PLUGIN_MALLOC(ctx, sizeof(grn_tf_limit_token_filter));
   if (!token_filter) {
@@ -361,7 +368,29 @@ tf_limit_init(grn_ctx *ctx, GNUC_UNUSED grn_obj *table, GNUC_UNUSED grn_token_mo
   } else {
     token_filter->tf_limit = DEFAULT_TF_LIMIT;
   }
+  token_filter->word_table = NULL;
+  token_filter->column = NULL;
+
+  tf_limit_word_table_name_env = getenv("GRN_YATOF_TF_LIMIT_WORD_TABLE_NAME");
+  if (tf_limit_word_table_name_env) {
+    token_filter->word_table = grn_ctx_get(ctx,
+                                           tf_limit_word_table_name_env,
+                                           strlen(tf_limit_word_table_name_env));
+  } else {
+    token_filter->word_table = grn_ctx_get(ctx,
+                                           TF_LIMIT_WORD_TABLE_NAME,
+                                           strlen(TF_LIMIT_WORD_TABLE_NAME));
+  }
+
+  if (token_filter->word_table) {
+     token_filter->column = grn_obj_column(ctx,
+                                           token_filter->word_table,
+                                           TF_LIMIT_COLUMN_NAME,
+                                           strlen(TF_LIMIT_COLUMN_NAME));
+  }
+
   GRN_UINT32_INIT(&(token_filter->value), 0);
+  GRN_UINT32_INIT(&(token_filter->word_tf_limit), 0);
   grn_tokenizer_token_init(ctx, &(token_filter->token));
 
   return token_filter;
@@ -378,6 +407,7 @@ tf_limit_filter(grn_ctx *ctx,
   grn_obj *data;
   grn_tokenizer_status status;
   data = grn_token_get_data(ctx, current_token);
+  unsigned int tf_limit = token_filter->tf_limit;
 
   {
     grn_id id;
@@ -390,7 +420,19 @@ tf_limit_filter(grn_ctx *ctx,
       grn_obj_set_value(ctx, token_filter->table, id, &(token_filter->value), GRN_OBJ_SET);
     }
   }
-  if (GRN_UINT32_VALUE(&(token_filter->value)) > token_filter->tf_limit) {
+
+  if (token_filter->word_table) {
+    grn_id id;
+    id = grn_table_get(ctx, token_filter->word_table,
+                       GRN_TEXT_VALUE(data), GRN_TEXT_LEN(data));
+    if (id != GRN_ID_NIL) {
+      GRN_BULK_REWIND(&(token_filter->word_tf_limit));
+      grn_obj_get_value(ctx, token_filter->column, id, &(token_filter->word_tf_limit));
+      tf_limit = GRN_UINT32_VALUE(&(token_filter->word_tf_limit));
+    }
+  }
+
+  if (GRN_UINT32_VALUE(&(token_filter->value)) > tf_limit) {
     status = grn_token_get_status(ctx, current_token);
     status |= GRN_TOKENIZER_TOKEN_SKIP;
     grn_token_set_status(ctx, next_token, status);
@@ -407,7 +449,14 @@ tf_limit_fin(grn_ctx *ctx, void *user_data)
   if (token_filter->table) {
     grn_obj_unlink(ctx, token_filter->table);
   }
+  if (token_filter->word_table) {
+    grn_obj_unlink(ctx, token_filter->word_table);
+  }
+  if (token_filter->column) {
+    grn_obj_unlink(ctx, token_filter->column);
+  }
   grn_obj_unlink(ctx, &(token_filter->value));
+  grn_obj_unlink(ctx, &(token_filter->word_tf_limit));
   grn_tokenizer_token_fin(ctx, &(token_filter->token));
   GRN_PLUGIN_FREE(ctx, token_filter);
 }
