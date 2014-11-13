@@ -323,7 +323,7 @@ digit_filter(grn_ctx *ctx,
   }
 }
 
-#define TF_LIMIT_WORD_TABLE_NAME "tf_limit_words"
+#define TF_LIMIT_WORD_TABLE_NAME "tf_limits"
 #define TF_LIMIT_COLUMN_NAME "tf_limit"
 
 typedef struct {
@@ -339,7 +339,7 @@ typedef struct {
 static void *
 tf_limit_init(grn_ctx *ctx, GNUC_UNUSED grn_obj *table, GNUC_UNUSED grn_token_mode mode)
 {
-#define DEFAULT_TF_LIMIT 65535
+#define DEFAULT_TF_LIMIT 131071
   grn_tf_limit_token_filter *token_filter;
   const char *tf_limit_env;
   const char *tf_limit_word_table_name_env;

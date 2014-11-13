@@ -1,8 +1,8 @@
 register token_filters/yatof
 
-table_create tf_limit_words TABLE_HASH_KEY ShortText
-column_create tf_limit_words tf_limit COLUMN_SCALAR UInt32
-load --table tf_limit_words
+table_create tf_limits TABLE_HASH_KEY ShortText
+column_create tf_limits tf_limit COLUMN_SCALAR UInt32
+load --table tf_limits
 [
 {"_key": "a", "tf_limit": 3}
 ]
