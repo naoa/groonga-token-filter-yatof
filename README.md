@@ -33,11 +33,11 @@ env
 テーブルにも環境変数にも設定がない場合、Groongaのデフォルトと同様に131071個の上限でトークンが捨てられます。
 
 ```bash
-table_create tf_limit_words TABLE_HASH_KEY ShortText
+table_create tf_limits TABLE_HASH_KEY ShortText
 [[0,0.0,0.0],true]
-column_create tf_limit_words tf_limit COLUMN_SCALAR UInt32
+column_create tf_limits tf_limit COLUMN_SCALAR UInt32
 [[0,0.0,0.0],true]
-load --table tf_limit_words
+load --table tf_limits
 [
 {"_key": "a", "tf_limit": 3}
 ]
