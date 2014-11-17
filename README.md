@@ -82,6 +82,16 @@ tokenize TokenBigram "a a a a b b b b"--normalizer NormalizerAuto --token_filter
 ]
 ```
 
+### ``TokenFilterPhraseLimit``
+
+検索時、追加時の両方で同一文書中に含まれる2トークンからなるフレーズが4096個を超えたトークンを捨てます。
+サイズの大きい文書において、頻出しすぎるトークンによるポスティングリストの長大化
+を抑制します。
+1文書ごとにハッシュ表でトークン数を数えているため、インデックス構築速度が結構劣>
+化するとおもいます。
+
+環境変数``GRN_YATOF_PHRASE_LIMIT``で最大フレーズ数を変更することができます。
+
 ### ``TokenFilterProlong``
 
 検索時、追加時の両方で4文字以上の全角カタカナのみのトークンの末尾の長音記号を除去します。  
