@@ -1,0 +1,7 @@
+register token_filters/yatof
+
+tokenize TokenBigram \
+  "*今日は123雨だ *A!" \
+  --normalizer NormalizerAuto \
+  --token_filters TokenFilterUnmaturedOne
+
