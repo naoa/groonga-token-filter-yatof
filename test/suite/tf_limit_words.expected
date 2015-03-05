@@ -31,6 +31,10 @@ tokenize TokenBigram "a a a a b b b b"--normalizer NormalizerAuto --token_filter
     },
     {
       "value": "b",
+      "position": 3
+    },
+    {
+      "value": "b",
       "position": 4
     },
     {
@@ -40,10 +44,6 @@ tokenize TokenBigram "a a a a b b b b"--normalizer NormalizerAuto --token_filter
     {
       "value": "b",
       "position": 6
-    },
-    {
-      "value": "b",
-      "position": 7
     }
   ]
 ]
