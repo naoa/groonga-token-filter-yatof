@@ -2,6 +2,8 @@
 
 ## Token Filters
 
+Groonga5.0.1以降で直る予定のパッチが適用されるまでは、オフラインインデックス構築時に適切にヒットしなくなる可能性があります。
+
 ### ``TokenFilterMaxLength``
 
 検索時、追加時の両方で64バイトを超えるトークンを除去します。  
@@ -155,8 +157,6 @@ tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_f
 ```
 
 ### ``TokenFilterRemoveWord``
-
-このトークンフィルターはオフラインインデックス構築をすると正しくヒットしなくなります。
 
 検索時、追加時の両方でテーブルのキーと一致するトークンを除去します。除去されたトークンは、positionを進めます。すなわち、除去されたトークンは、他の除去トークンと同一視されるようになります。たとえば、以下の例では、"Hello and World"は、"Hello or World"でもヒットしますが、"Hello World"ではヒットしません。  
 あらかじめ除外対象の語句が格納されたテーブル``remove_words``を作る必要があります。  

@@ -10,27 +10,27 @@ tokenize TokenBigram   "*今日は123雨だ *A!"   --normalizer NormalizerAuto  
   [
     {
       "value": "今日",
-      "position": 0
-    },
-    {
-      "value": "日は",
       "position": 1
     },
     {
-      "value": "は",
+      "value": "日は",
       "position": 2
     },
     {
-      "value": "雨だ",
+      "value": "は",
       "position": 3
     },
     {
+      "value": "雨だ",
+      "position": 5
+    },
+    {
       "value": "だ",
-      "position": 4
+      "position": 6
     },
     {
       "value": "a",
-      "position": 5
+      "position": 8
     }
   ]
 ]
