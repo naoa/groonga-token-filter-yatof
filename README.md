@@ -178,6 +178,27 @@ tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_f
 [[0,0.0,0.0],[{"value":"hello","position":0},{"value":"world","position":2}]]
 ```
 
+### ``TokenFilterThroughWord``
+
+検索時、追加時の両方でテーブルのキーと一致するトークンのみを通します。除去されたトークンは、positionを進めます。
+あらかじめ除外対象の語句が格納されたテーブル``through_words``を作る必要があります。
+検索時、追加時の両方で除去されるため、転置索引のサイズを抑えることができます。しかし、整合性を保つため、除外対象の語句を追加した場合は、インデックス再構築が必要です。
+
+環境変数``GRN_YATOF_THROUGH_WORD_TABLE_NAME``でテーブルを変更することができます。
+
+```bash
+table_create through_words TABLE_HASH_KEY ShortText
+[[0,0.0,0.0],true]
+load --table through_words
+[
+{"_key": "hello"},
+{"_key": "world"}
+]
+[[0,0.0,0.0],2]
+tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_filters TokenFilterThroughWord
+[[0,0.0,0.0],[{"value":"hello","position":0},{"value":"world","position":2}]]
+```
+
 ### ``TokenFilterSynonym``
 
 検索時、追加時の両方でテーブルのキーと一致するトークンを同義語に変換します。
