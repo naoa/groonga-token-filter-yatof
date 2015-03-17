@@ -111,7 +111,7 @@ max_length_filter(grn_ctx *ctx,
 
   if (GRN_TEXT_LEN(data) > token_filter->max_length_in_bytes) {
     status = grn_token_get_status(ctx, current_token);
-    status |= GRN_TOKEN_SKIP;
+    status |= GRN_TOKEN_SKIP_WITH_POSITION;
     grn_token_set_status(ctx, next_token, status);
   }
 }
@@ -175,7 +175,7 @@ min_length_filter(grn_ctx *ctx,
 
   if (GRN_TEXT_LEN(data) < token_filter->min_length_in_bytes) {
     status = grn_token_get_status(ctx, current_token);
-    status |= GRN_TOKEN_SKIP;
+    status |= GRN_TOKEN_SKIP_WITH_POSITION;
     grn_token_set_status(ctx, next_token, status);
   }
 }
@@ -276,7 +276,7 @@ symbol_filter(grn_ctx *ctx,
   }
   if (is_symbol) {
     status = grn_token_get_status(ctx, current_token);
-    status |= GRN_TOKEN_SKIP;
+    status |= GRN_TOKEN_SKIP_WITH_POSITION;
     grn_token_set_status(ctx, next_token, status);
   }
 }
@@ -318,7 +318,7 @@ digit_filter(grn_ctx *ctx,
   }
   if (is_digit) {
     status = grn_token_get_status(ctx, current_token);
-    status |= GRN_TOKEN_SKIP;
+    status |= GRN_TOKEN_SKIP_WITH_POSITION;
     grn_token_set_status(ctx, next_token, status);
   }
 }
@@ -356,7 +356,7 @@ unmatured_one_filter(grn_ctx *ctx,
   if (token_size == 1) {
     status = grn_token_get_status(ctx, current_token);
     if (status & GRN_TOKEN_UNMATURED) {
-      status |= GRN_TOKEN_SKIP;
+      status |= GRN_TOKEN_SKIP_WITH_POSITION;
       grn_token_set_status(ctx, next_token, status);
     }
   }
@@ -473,10 +473,10 @@ tf_limit_filter(grn_ctx *ctx,
 
   if (GRN_UINT32_VALUE(&(token_filter->value)) > tf_limit) {
     status = grn_token_get_status(ctx, current_token);
-    status |= GRN_TOKEN_SKIP;
+    status |= GRN_TOKEN_SKIP_WITH_POSITION;
     grn_token_set_status(ctx, next_token, status);
 
-    GRN_PLUGIN_LOG(ctx, GRN_LOG_NOTICE,
+    GRN_PLUGIN_LOG(ctx, GRN_LOG_INFO,
                    "[token-filter][tf-limit] "
                    "<%.*s> is reached on tf limit %u",
                    (int)GRN_TEXT_LEN(data), GRN_TEXT_VALUE(data),
@@ -587,7 +587,7 @@ phrase_limit_filter(grn_ctx *ctx,
 
   if (GRN_UINT32_VALUE(&(token_filter->value)) > phrase_limit) {
     status = grn_token_get_status(ctx, current_token);
-    status |= GRN_TOKEN_SKIP;
+    status |= GRN_TOKEN_SKIP_WITH_POSITION:q;
     grn_token_set_status(ctx, next_token, status);
 
     GRN_PLUGIN_LOG(ctx, GRN_LOG_NOTICE,
@@ -837,7 +837,7 @@ through_word_filter(grn_ctx *ctx,
                        GRN_TEXT_VALUE(data), GRN_TEXT_LEN(data));
     if (id == GRN_ID_NIL) {
       status = grn_token_get_status(ctx, current_token);
-      status |= GRN_TOKEN_SKIP;
+      status |= GRN_TOKEN_SKIP_WITH_POSITION;
       grn_token_set_status(ctx, next_token, status);
     }
   }

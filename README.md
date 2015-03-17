@@ -2,8 +2,6 @@
 
 ## Token Filters
 
-Groonga5.0.1以降で直る予定のパッチが適用されるまでは、オフラインインデックス構築時に適切にヒットしなくなる可能性があります。
-
 ### ``TokenFilterMaxLength``
 
 検索時、追加時の両方で64バイトを超えるトークンを除去します。  
@@ -71,6 +69,10 @@ tokenize TokenBigram "a a a a b b b b"--normalizer NormalizerAuto --token_filter
     },
     {
       "value": "b",
+      "position": 3
+    },
+    {
+      "value": "b",
       "position": 4
     },
     {
@@ -80,10 +82,6 @@ tokenize TokenBigram "a a a a b b b b"--normalizer NormalizerAuto --token_filter
     {
       "value": "b",
       "position": 6
-    },
-    {
-      "value": "b",
-      "position": 7
     }
   ]
 ]
@@ -158,6 +156,8 @@ tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_f
 
 ### ``TokenFilterRemoveWord``
 
+**このトークンフィルターは静的索引構築をすると正しく動作しなくなります。**
+
 検索時、追加時の両方でテーブルのキーと一致するトークンを除去します。除去されたトークンは、positionを進めます。すなわち、除去されたトークンは、他の除去トークンと同一視されるようになります。たとえば、以下の例では、"Hello and World"は、"Hello or World"でもヒットしますが、"Hello World"ではヒットしません。  
 あらかじめ除外対象の語句が格納されたテーブル``remove_words``を作る必要があります。  
 検索時、追加時の両方で除去されるため、転置索引のサイズを抑えることができます。しかし、整合性を保つため、除外対象の語句を追加した場合は、インデックス再構築が必要です。  
@@ -196,7 +196,7 @@ load --table through_words
 ]
 [[0,0.0,0.0],2]
 tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_filters TokenFilterThroughWord
-[[0,0.0,0.0],[{"value":"hello","position":0},{"value":"world","position":2}]]
+[[0,0.0,0.0],[{"value":"hello","position":0},{"value":"world","position":1}]]
 ```
 
 ### ``TokenFilterSynonym``
