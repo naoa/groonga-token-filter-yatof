@@ -587,7 +587,7 @@ phrase_limit_filter(grn_ctx *ctx,
 
   if (GRN_UINT32_VALUE(&(token_filter->value)) > phrase_limit) {
     status = grn_token_get_status(ctx, current_token);
-    status |= GRN_TOKEN_SKIP_WITH_POSITION:q;
+    status |= GRN_TOKEN_SKIP_WITH_POSITION;
     grn_token_set_status(ctx, next_token, status);
 
     GRN_PLUGIN_LOG(ctx, GRN_LOG_NOTICE,
