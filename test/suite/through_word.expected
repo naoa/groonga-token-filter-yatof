@@ -9,4 +9,4 @@ load --table through_words
 ]
 [[0,0.0,0.0],2]
 tokenize TokenBigram "Hello and World"   --normalizer NormalizerAuto   --token_filters TokenFilterThroughWord
-[[0,0.0,0.0],[{"value":"hello","position":0},{"value":"world","position":2}]]
+[[0,0.0,0.0],[{"value":"hello","position":0},{"value":"world","position":1}]]

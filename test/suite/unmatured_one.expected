@@ -22,23 +22,23 @@ tokenize TokenBigram   "*今日は123雨だ *A!"   --normalizer NormalizerAuto  
     },
     {
       "value": "123",
-      "position": 4
+      "position": 3
     },
     {
       "value": "雨だ",
-      "position": 5
+      "position": 4
     },
     {
       "value": "*",
-      "position": 7
+      "position": 5
     },
     {
       "value": "a",
-      "position": 8
+      "position": 6
     },
     {
       "value": "!",
-      "position": 9
+      "position": 7
     }
   ]
 ]
