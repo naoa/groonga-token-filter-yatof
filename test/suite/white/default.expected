@@ -1,0 +1,11 @@
+register token_filters/yatof
+[[0,0.0,0.0],true]
+table_create white_terms TABLE_HASH_KEY ShortText --normalizer NormalizerAuto
+[[0,0.0,0.0],true]
+load --table white_terms
+[
+{"_key": "senna"}
+]
+[[0,0.0,0.0],1]
+tokenize TokenBigram "Hello Senna"   --normalizer NormalizerAuto   --token_filters TokenFilterWhite
+[[0,0.0,0.0],[{"value":"senna","position":1,"force_prefix":false}]]

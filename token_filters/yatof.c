@@ -341,13 +341,11 @@ unmatured_one_filter(grn_ctx *ctx,
     const char *rest = GRN_TEXT_VALUE(data);
 
     while (rest_length > 0) {
-      grn_char_type type;
       grn_encoding encoding = GRN_CTX_GET_ENCODING(ctx);
       char_length = grn_plugin_charlen(ctx, rest, rest_length, encoding);
       if (char_length == 0) {
         break;
       }
-      type = grn_nfkc_char_type((unsigned char *)rest);
       token_size++;
       rest += char_length;
       rest_length -= char_length;
@@ -958,9 +956,96 @@ synonym_fin(grn_ctx *ctx, void *user_data)
   GRN_PLUGIN_FREE(ctx, token_filter);
 }
 
+
+const char *white_table_name = "white_terms";
+uint32_t white_table_name_size = 11;
+
+typedef struct {
+  grn_tokenizer_token token;
+  grn_obj *table;
+  grn_token_mode mode;
+} grn_white_token_filter;
+
+static void *
+white_init(grn_ctx *ctx, GNUC_UNUSED grn_obj *table, GNUC_UNUSED grn_token_mode mode)
+{
+  grn_white_token_filter *token_filter;
+
+  token_filter = GRN_PLUGIN_MALLOC(ctx, sizeof(grn_white_token_filter));
+  if (!token_filter) {
+    GRN_PLUGIN_ERROR(ctx, GRN_NO_MEMORY_AVAILABLE,
+                     "[token-filter][white] "
+                     "failed to allocate grn_white_token_filter");
+    return NULL;
+  }
+  token_filter->table = grn_ctx_get(ctx,
+                                    white_table_name,
+                                    white_table_name_size);
+  if (!token_filter->table) {
+    GRN_PLUGIN_ERROR(ctx, GRN_NO_MEMORY_AVAILABLE,
+                     "[token-filter][white] "
+                     "couldn't open a table");
+    GRN_PLUGIN_FREE(ctx, token_filter);
+    return NULL;
+  }
+  token_filter->mode = mode;
+
+  grn_tokenizer_token_init(ctx, &(token_filter->token));
+
+  return token_filter;
+}
+
+static void
+white_filter(grn_ctx *ctx,
+             grn_token *current_token,
+             grn_token *next_token,
+             void *user_data)
+{
+  grn_white_token_filter *token_filter = user_data;
+  grn_obj *data;
+  data = grn_token_get_data(ctx, current_token);
+
+  {
+    grn_id id;
+    id = grn_table_get(ctx, token_filter->table,
+                       GRN_TEXT_VALUE(data), GRN_TEXT_LEN(data));
+    if (id == GRN_ID_NIL) {
+      grn_tokenizer_status status;
+      status = grn_token_get_status(ctx, current_token);
+      status |= GRN_TOKEN_SKIP;
+      grn_token_set_status(ctx, next_token, status);
+    }
+  }
+}
+
+static void
+white_fin(grn_ctx *ctx, void *user_data)
+{
+  grn_white_token_filter *token_filter = user_data;
+  if (!token_filter) {
+    return;
+  }
+  if (token_filter->table) {
+    grn_obj_unlink(ctx, token_filter->table);
+  }
+  grn_tokenizer_token_fin(ctx, &(token_filter->token));
+  GRN_PLUGIN_FREE(ctx, token_filter);
+}
+
 grn_rc
 GRN_PLUGIN_INIT(grn_ctx *ctx)
 {
+  {
+    const char *config_table_name;
+    uint32_t config_table_name_size;
+    grn_config_get(ctx,
+                   "tokenfilter-white.table", -1,
+                   &config_table_name, &config_table_name_size);
+    if (config_table_name) {
+      white_table_name = config_table_name;
+      white_table_name_size = config_table_name_size;
+    }
+  }
   return ctx->rc;
 }
 
@@ -1041,6 +1126,11 @@ GRN_PLUGIN_REGISTER(grn_ctx *ctx)
                                  unmatured_one_filter,
                                  yatof_fin);
 
+  rc = grn_token_filter_register(ctx,
+                                 "TokenFilterWhite", -1,
+                                 white_init,
+                                 white_filter,
+                                 white_fin);
   return rc;
 }
 

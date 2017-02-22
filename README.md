@@ -221,71 +221,34 @@ tokenize TokenBigram "Hello Senna"   --normalizer NormalizerAuto   --token_filte
 [[0,0.0,0.0],[{"value":"hello","position":0},{"value":"groonga","position":1}]]
 ```
 
+### ``TokenFilterWhite``
+
+
+あらかじめ``white_terms``テーブルに登録されたキーのみを通すフィルター。
+
+もしくは``tokenfilter-white.table``のコンフィグでテーブル名の変更が可能。
+
+```
+config_set tokenfilter-white.table white_words
+```
+
+
+```
+register token_filters/yatof
+[[0,0.0,0.0],true]
+table_create white_terms TABLE_HASH_KEY ShortText --normalizer NormalizerAuto
+[[0,0.0,0.0],true]
+load --table white_terms
+[
+{"_key": "senna"}
+]
+[[0,0.0,0.0],1]
+tokenize TokenBigram "Hello Senna"   --normalizer NormalizerAuto   --token_filters TokenFilterWhite
+[[0,0.0,0.0],[{"value":"senna","position":1,"force_prefix":false}]]
+```
+
+
 ## Install
-
-Install ``groonga-token-filter-yatof`` package:
-
-### CentOS
-
-* CentOS6
-
-```
-% sudo yum localinstall -y http://packages.createfield.com/centos/6/groonga-token-filter-yatof-0.0.1-1.el6.x86_64.rpm
-```
-
-* CentOS7
-
-```
-% sudo yum localinstall -y http://packages.createfield.com/centos/7/groonga-token-filter-yatof-0.0.1-1.el7.centos.x86_64.rpm
-```
-
-### Fedora
-
-未作成
-
-* Fedora 20
-
-```
-% sudo yum localinstall -y http://packages.createfield.com/fedora/20/groonga-token-filter-yatof-0.0.1-1.fc20.x86_64.rpm
-```
-
-* Fedora 21
-
-```
-% sudo yum localinstall -y http://packages.createfield.com/fedora/21/groonga-token-filter-yatof-0.0.1-1.fc21.x86_64.rpm
-```
-
-### Debian GNU/LINUX
-
-* wheezy
-
-```
-% wget http://packages.createfield.com/debian/wheezy/groonga-token-filter-yatof_0.0.1-1_amd64.deb
-% sudo dpkg -i groonga-token-filter-yatof_0.0.1-1_amd64.deb
-```
-
-### Ubuntu
-
-* precise
-
-```
-% wget http://packages.createfield.com/ubuntu/precise/groonga-token-filter-yatof_0.0.1-1_amd64.deb
-% sudo dpkg -i groonga-token-filter-yatof_0.0.1-1_amd64.deb
-```
-
-* trusty
-
-```
-% wget http://packages.createfield.com/ubuntu/trusty/groonga-token-filter-yatof_0.0.1-1_amd64.deb
-% sudo dpkg -i groonga-token-filter-yatof_0.0.1-1_amd64.deb
-```
-
-* utopic
-
-```
-% wget http://packages.createfield.com/ubuntu/utopic/groonga-token-filter-yatof_0.0.1-1_amd64.deb
-% sudo dpkg -i groonga-token-filter-yatof_0.0.1-1_amd64.deb
-```
 
 ### Source install
 
