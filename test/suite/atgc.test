@@ -1,0 +1,7 @@
+register token_filters/yatof
+
+tokenize TokenBigram \
+  "ATGCATGCA ATKING" \
+  --normalizer NormalizerAuto \
+  --token_filters TokenFilterATGC
+

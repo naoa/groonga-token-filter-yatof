@@ -224,6 +224,10 @@ tokenize TokenBigram "Hello Senna"   --normalizer NormalizerAuto   --token_filte
 [[0,0.0,0.0],[{"value":"senna","position":1,"force_prefix":false}]]
 ```
 
+### ``TokenFilterATGC``
+
+塩基配列ATGCが9つ以上現れるトークンを除外
+
 
 ## Install
 

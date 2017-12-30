@@ -1,0 +1,4 @@
+register token_filters/yatof
+[[0,0.0,0.0],true]
+tokenize TokenBigram   "ATGCATGCA ATKING"   --normalizer NormalizerAuto   --token_filters TokenFilterATGC
+[[0,0.0,0.0],[{"value":"atking","position":0,"force_prefix":false}]]

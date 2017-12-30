@@ -360,6 +360,48 @@ unmatured_one_filter(grn_ctx *ctx,
   }
 }
 
+#define ATGC_LIMIT 9
+
+static void
+atgc_filter(grn_ctx *ctx,
+             grn_token *current_token,
+             grn_token *next_token,
+             GNUC_UNUSED void *user_data)
+{
+  grn_obj *data;
+  grn_tokenizer_status status;
+  int token_size = 0;
+  int n_atgc = 0;
+
+  data = grn_token_get_data(ctx, current_token);
+
+  {
+    int char_length;
+    int rest_length = GRN_TEXT_LEN(data);
+    const char *rest = GRN_TEXT_VALUE(data);
+
+    while (rest_length > 0) {
+      grn_encoding encoding = GRN_CTX_GET_ENCODING(ctx);
+      char_length = grn_plugin_charlen(ctx, rest, rest_length, encoding);
+      if (char_length == 0) {
+        break;
+      }
+      if (rest[0] == 'A' || rest[0] == 'T' || rest[0] == 'G' || rest[0] == 'C' ||
+          rest[0] == 'a' || rest[0] == 't' || rest[0] == 'g' || rest[0] == 'c') {
+        n_atgc++;
+      }
+      token_size++;
+      rest += char_length;
+      rest_length -= char_length;
+    }
+  }
+  if (n_atgc >= ATGC_LIMIT) {
+    status = grn_token_get_status(ctx, current_token);
+    status |= GRN_TOKEN_SKIP_WITH_POSITION;
+    grn_token_set_status(ctx, next_token, status);
+  }
+}
+
 #define TF_LIMIT_WORD_TABLE_NAME "tf_limits"
 #define TF_LIMIT_COLUMN_NAME "tf_limit"
 
@@ -1131,6 +1173,13 @@ GRN_PLUGIN_REGISTER(grn_ctx *ctx)
                                  white_init,
                                  white_filter,
                                  white_fin);
+
+  rc = grn_token_filter_register(ctx,
+                                 "TokenFilterATGC", -1,
+                                 yatof_init,
+                                 atgc_filter,
+                                 yatof_fin);
+
   return rc;
 }
 
