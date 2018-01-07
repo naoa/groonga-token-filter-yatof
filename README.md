@@ -226,7 +226,7 @@ tokenize TokenBigram "Hello Senna"   --normalizer NormalizerAuto   --token_filte
 
 ### ``TokenFilterATGC``
 
-塩基配列ATGCが9つ以上現れるトークンを除外
+塩基配列ATGCUが9つ以上現れるトークンを除外
 
 
 ## Install
