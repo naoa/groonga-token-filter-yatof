@@ -389,7 +389,7 @@ atgc_filter(grn_ctx *ctx,
       if (rest[0] == 'A' || rest[0] == 'T' || rest[0] == 'G' || rest[0] == 'C' || rest[0] == 'U' ||
           rest[0] == 'a' || rest[0] == 't' || rest[0] == 'g' || rest[0] == 'c' || rest[0] == 'u') {
         n_atgc++;
-      } else if (rest[0] == ' ') {
+      } else {
         n_atgc = 0;
       }
       token_size++;
