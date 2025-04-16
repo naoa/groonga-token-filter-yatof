@@ -265,7 +265,7 @@ symbol_filter(grn_ctx *ctx,
         break;
       }
       type = grn_nfkc_char_type((unsigned char *)rest);
-      if (type != GRN_CHAR_SYMBOL) {
+      if (type != GRN_CHAR_SYMBOL && type != GRN_CHAR_OTHERS) {
         is_symbol = GRN_FALSE;
         break;
       }

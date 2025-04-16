@@ -1,0 +1,4 @@
+register token_filters/yatof
+[[0,0.0,0.0],true]
+tokenize TokenDelimit   "!+:、!!’"   --normalizer NormalizerAuto   --token_filters TokenFilterSymbol
+[[0,0.0,0.0],[]]

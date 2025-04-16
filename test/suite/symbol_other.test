@@ -1,0 +1,7 @@
+register token_filters/yatof
+
+tokenize TokenDelimit \
+  "!+:、!!’" \
+  --normalizer NormalizerAuto \
+  --token_filters TokenFilterSymbol
+
