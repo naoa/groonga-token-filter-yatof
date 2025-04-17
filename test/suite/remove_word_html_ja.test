@@ -1,0 +1,11 @@
+register token_filters/yatof
+
+table_create remove_words TABLE_HASH_KEY ShortText
+load --table remove_words
+[
+{"_key": "<remove_html>"}
+]
+
+tokenize TokenDelimit "<SPAN>ほげ</SPAN> <p>huga</p> <5" \
+  --normalizer NormalizerAuto \
+  --token_filters TokenFilterRemoveWord

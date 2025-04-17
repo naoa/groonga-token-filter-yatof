@@ -815,11 +815,10 @@ remove_word_filter(grn_ctx *ctx,
     grn_bool in_tag = GRN_FALSE;
     const char *tag_start = NULL;
     int tag_length = 0;
-    const int MAX_TAG_LENGTH = 100; // Maximum length for a tag before treating as normal text
+    grn_encoding encoding = GRN_CTX_GET_ENCODING(ctx);
 
     while (rest_length > 0) {
       grn_char_type type;
-      grn_encoding encoding = GRN_CTX_GET_ENCODING(ctx);
       char_length = grn_plugin_charlen(ctx, rest, rest_length, encoding);
       if (char_length == 0) {
         break;
@@ -831,7 +830,7 @@ remove_word_filter(grn_ctx *ctx,
           tag_start = rest;
           tag_length = 0;
         } else {
-          GRN_TEXT_PUTC(ctx, &(token_filter->value), *rest);
+          GRN_TEXT_PUT(ctx, &(token_filter->value), rest, char_length);
         }
       } else {
         if (*rest == '>') {
@@ -839,19 +838,6 @@ remove_word_filter(grn_ctx *ctx,
           tag_length = 0;
         } else {
           tag_length += char_length;
-          // If tag becomes too long without closing, treat as normal text
-          if (tag_length > MAX_TAG_LENGTH) {
-            in_tag = GRN_FALSE;
-            // Add the opening '<' and all characters so far
-            GRN_TEXT_PUTC(ctx, &(token_filter->value), '<');
-            const char *p = tag_start + 1;
-            int len = rest - p;
-            while (p < rest) {
-              GRN_TEXT_PUTC(ctx, &(token_filter->value), *p);
-              p++;
-            }
-            GRN_TEXT_PUTC(ctx, &(token_filter->value), *rest);
-          }
         }
       }
 
@@ -862,9 +848,12 @@ remove_word_filter(grn_ctx *ctx,
     // Handle case where document ends with an unclosed tag
     if (in_tag) {
       const char *p = tag_start;
-      while (p < rest) {
-        GRN_TEXT_PUTC(ctx, &(token_filter->value), *p);
-        p++;
+      rest_length = GRN_TEXT_LEN(data) - (p - GRN_TEXT_VALUE(data));
+      while (rest_length > 0) {
+        char_length = grn_plugin_charlen(ctx, p, rest_length, encoding);
+        GRN_TEXT_PUT(ctx, &(token_filter->value), p, char_length);
+        p += char_length;
+        rest_length -= char_length;
       }
     }
 
