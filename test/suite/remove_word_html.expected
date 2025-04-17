@@ -1,0 +1,37 @@
+register token_filters/yatof
+[[0,0.0,0.0],true]
+table_create remove_words TABLE_HASH_KEY ShortText
+[[0,0.0,0.0],true]
+load --table remove_words
+[
+{"_key": "<remove_html>"}
+]
+[[0,0.0,0.0],1]
+tokenize TokenDelimit "<SPAN>hogehoge</SPAN> <p>huga</p> <5"   --normalizer NormalizerAuto   --token_filters TokenFilterRemoveWord
+[
+  [
+    0,
+    0.0,
+    0.0
+  ],
+  [
+    {
+      "value": "hogehoge",
+      "position": 0,
+      "force_prefix": false,
+      "force_prefix_search": false
+    },
+    {
+      "value": "huga",
+      "position": 1,
+      "force_prefix": false,
+      "force_prefix_search": false
+    },
+    {
+      "value": "<5",
+      "position": 2,
+      "force_prefix": false,
+      "force_prefix_search": false
+    }
+  ]
+]

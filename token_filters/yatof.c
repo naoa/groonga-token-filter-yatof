@@ -738,11 +738,13 @@ ignore_word_fin(grn_ctx *ctx, void *user_data)
 }
 
 #define REMOVE_WORD_TABLE_NAME "remove_words"
+#define REMOVE_WORD_HTML_TAG "<remove_html>"
 
 typedef struct {
   grn_tokenizer_token token;
   grn_obj *table;
   grn_obj value;
+  grn_bool remove_html;
 } grn_remove_word_token_filter;
 
 static void *
@@ -776,6 +778,16 @@ remove_word_init(grn_ctx *ctx, GNUC_UNUSED grn_obj *table, GNUC_UNUSED grn_token
     return NULL;
   }
 
+  token_filter->remove_html = GRN_TRUE;
+  {
+    grn_id id;
+    id = grn_table_get(ctx, token_filter->table, REMOVE_WORD_HTML_TAG, strlen(REMOVE_WORD_HTML_TAG));
+    if (id) {
+      token_filter->remove_html = GRN_TRUE;
+    }
+  }
+  GRN_TEXT_INIT(&(token_filter->value), 0);
+
   grn_tokenizer_token_init(ctx, &(token_filter->token));
 
   return token_filter;
@@ -792,7 +804,83 @@ remove_word_filter(grn_ctx *ctx,
   grn_tokenizer_status status;
   data = grn_token_get_data(ctx, current_token);
 
-  {
+  if (token_filter->remove_html) {
+
+    int char_length;
+    int rest_length = GRN_TEXT_LEN(data);
+    const char *rest = GRN_TEXT_VALUE(data);
+
+    GRN_BULK_REWIND(&(token_filter->value));
+
+    grn_bool in_tag = GRN_FALSE;
+    const char *tag_start = NULL;
+    int tag_length = 0;
+    const int MAX_TAG_LENGTH = 100; // Maximum length for a tag before treating as normal text
+
+    while (rest_length > 0) {
+      grn_char_type type;
+      grn_encoding encoding = GRN_CTX_GET_ENCODING(ctx);
+      char_length = grn_plugin_charlen(ctx, rest, rest_length, encoding);
+      if (char_length == 0) {
+        break;
+      }
+
+      if (!in_tag) {
+        if (*rest == '<') {
+          in_tag = GRN_TRUE;
+          tag_start = rest;
+          tag_length = 0;
+        } else {
+          GRN_TEXT_PUTC(ctx, &(token_filter->value), *rest);
+        }
+      } else {
+        if (*rest == '>') {
+          in_tag = GRN_FALSE;
+          tag_length = 0;
+        } else {
+          tag_length += char_length;
+          // If tag becomes too long without closing, treat as normal text
+          if (tag_length > MAX_TAG_LENGTH) {
+            in_tag = GRN_FALSE;
+            // Add the opening '<' and all characters so far
+            GRN_TEXT_PUTC(ctx, &(token_filter->value), '<');
+            const char *p = tag_start + 1;
+            int len = rest - p;
+            while (p < rest) {
+              GRN_TEXT_PUTC(ctx, &(token_filter->value), *p);
+              p++;
+            }
+            GRN_TEXT_PUTC(ctx, &(token_filter->value), *rest);
+          }
+        }
+      }
+
+      rest += char_length;
+      rest_length -= char_length;
+    }
+
+    // Handle case where document ends with an unclosed tag
+    if (in_tag) {
+      const char *p = tag_start;
+      while (p < rest) {
+        GRN_TEXT_PUTC(ctx, &(token_filter->value), *p);
+        p++;
+      }
+    }
+
+    grn_token_set_data(ctx, next_token,
+                       GRN_TEXT_VALUE(&(token_filter->value)),
+                       GRN_TEXT_LEN(&(token_filter->value)));
+
+    grn_id id;
+    id = grn_table_get(ctx, token_filter->table,
+                       GRN_TEXT_VALUE(&(token_filter->value)), GRN_TEXT_LEN(&(token_filter->value)));
+    if (id != GRN_ID_NIL) {
+      status = grn_token_get_status(ctx, current_token);
+      status |= GRN_TOKEN_SKIP;
+      grn_token_set_status(ctx, next_token, status);
+    }
+  } else {
     grn_id id;
     id = grn_table_get(ctx, token_filter->table,
                        GRN_TEXT_VALUE(data), GRN_TEXT_LEN(data));
@@ -814,6 +902,7 @@ remove_word_fin(grn_ctx *ctx, void *user_data)
   if (token_filter->table) {
     grn_obj_unlink(ctx, token_filter->table);
   }
+  grn_obj_close(ctx, &(token_filter->value));
   grn_tokenizer_token_fin(ctx, &(token_filter->token));
   GRN_PLUGIN_FREE(ctx, token_filter);
 }
