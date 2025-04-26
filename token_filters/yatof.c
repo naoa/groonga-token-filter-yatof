@@ -739,12 +739,14 @@ ignore_word_fin(grn_ctx *ctx, void *user_data)
 
 #define REMOVE_WORD_TABLE_NAME "remove_words"
 #define REMOVE_WORD_HTML_TAG "<remove_html>"
+#define REMOVE_WORD_EOS_TAG "<remove_eos>"
 
 typedef struct {
   grn_tokenizer_token token;
   grn_obj *table;
   grn_obj value;
   grn_bool remove_html;
+  grn_bool remove_eos;
 } grn_remove_word_token_filter;
 
 static void *
@@ -778,12 +780,20 @@ remove_word_init(grn_ctx *ctx, GNUC_UNUSED grn_obj *table, GNUC_UNUSED grn_token
     return NULL;
   }
 
-  token_filter->remove_html = GRN_TRUE;
+  token_filter->remove_html = GRN_FALSE;
   {
     grn_id id;
     id = grn_table_get(ctx, token_filter->table, REMOVE_WORD_HTML_TAG, strlen(REMOVE_WORD_HTML_TAG));
     if (id) {
       token_filter->remove_html = GRN_TRUE;
+    }
+  }
+  token_filter->remove_eos = GRN_FALSE;
+  {
+    grn_id id;
+    id = grn_table_get(ctx, token_filter->table, REMOVE_WORD_EOS_TAG, strlen(REMOVE_WORD_EOS_TAG));
+    if (id) {
+      token_filter->remove_eos = GRN_TRUE;
     }
   }
   GRN_TEXT_INIT(&(token_filter->value), 0);
@@ -803,6 +813,8 @@ remove_word_filter(grn_ctx *ctx,
   grn_obj *data;
   grn_tokenizer_status status;
   data = grn_token_get_data(ctx, current_token);
+
+  status = grn_token_get_status(ctx, current_token);
 
   if (token_filter->remove_html) {
 
@@ -865,20 +877,29 @@ remove_word_filter(grn_ctx *ctx,
     id = grn_table_get(ctx, token_filter->table,
                        GRN_TEXT_VALUE(&(token_filter->value)), GRN_TEXT_LEN(&(token_filter->value)));
     if (id != GRN_ID_NIL) {
-      status = grn_token_get_status(ctx, current_token);
       status |= GRN_TOKEN_SKIP;
-      grn_token_set_status(ctx, next_token, status);
     }
-  } else {
+  }
+
+  if (token_filter->remove_eos) {
+    int char_length;
+    int rest_length = GRN_TEXT_LEN(data);
+    const char *rest = GRN_TEXT_VALUE(data);
+
+    if (rest_length >= 4 && (strncmp(rest, "EOS ", 4) == 0 || strncmp(rest, "eos ", 4) == 0)) {
+      status |= GRN_TOKEN_SKIP;
+    }
+  }
+
+  {
     grn_id id;
     id = grn_table_get(ctx, token_filter->table,
                        GRN_TEXT_VALUE(data), GRN_TEXT_LEN(data));
     if (id != GRN_ID_NIL) {
-      status = grn_token_get_status(ctx, current_token);
       status |= GRN_TOKEN_SKIP;
-      grn_token_set_status(ctx, next_token, status);
     }
   }
+  grn_token_set_status(ctx, next_token, status);
 }
 
 static void

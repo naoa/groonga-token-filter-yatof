@@ -1,0 +1,11 @@
+register token_filters/yatof
+[[0,0.0,0.0],true]
+table_create remove_words TABLE_HASH_KEY ShortText
+[[0,0.0,0.0],true]
+load --table remove_words
+[
+{"_key": "<remove_eos>"}
+]
+[[0,0.0,0.0],1]
+tokenize TokenDelimitNull "EOS hoge"   --normalizer NormalizerAuto   --token_filters TokenFilterRemoveWord
+[[0,0.0,0.0],[]]
