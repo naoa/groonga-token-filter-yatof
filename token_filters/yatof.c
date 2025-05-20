@@ -21,6 +21,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <stdio.h>
+#include <ctype.h>
+#include <math.h>
+#include <locale.h>
+
 #ifdef __GNUC__
 #  define GNUC_UNUSED __attribute__((__unused__))
 #else
@@ -740,6 +745,167 @@ ignore_word_fin(grn_ctx *ctx, void *user_data)
 #define REMOVE_WORD_TABLE_NAME "remove_words"
 #define REMOVE_WORD_HTML_TAG "<remove_html>"
 #define REMOVE_WORD_EOS_TAG "<remove_eos>"
+#define REMOVE_WORD_NON_ENGLISH_TAG "<remove_non_en>"
+
+
+// 文字列がアルファベットとスペースのみで構成されているか判定する関数
+static int
+is_alpha_only(const char *str) {
+  if (str == NULL) {
+    return 0;
+  }
+
+  while (*str) {
+    if (!isalpha((unsigned char)*str) && !isspace((unsigned char)*str)) {
+      return 0;
+    }
+    str++;
+  }
+  return 1;
+}
+
+// 文字列が化学式らしいかどうかを判定する関数
+static int
+is_chemical_formula(const char *str) {
+  if (str == NULL || strlen(str) == 0) {
+    return 0;
+  }
+
+  // 化学式の特徴的なパターンを定義
+  // 1. 数字を含む場合
+  int has_digit = 0;
+  for (int i = 0; str[i]; i++) {
+    if (isdigit((unsigned char)str[i])) {
+      has_digit = 1;
+      break;
+    }
+  }
+
+  if (has_digit) {
+    return 1; // 数字を含む場合は化学式の可能性が高い
+  }
+
+  // 2. 代表的な化学式パターンにマッチするか確認
+  const char *specific_formulas[] = {
+    "NaCl", "CuSO", "FeO", "ZnCl", "AgNO", "KOH", "MgO", "CaO",
+    "HCl", "NH"
+  };
+  int formula_count = sizeof(specific_formulas) / sizeof(specific_formulas[0]);
+
+  for (int i = 0; i < formula_count; i++) {
+    if (strstr(str, specific_formulas[i]) != NULL) {
+      return 1;
+    }
+  }
+
+  // 3. 他の判定条件は使用しない
+  return 0;
+}
+
+// 英単語らしくないかどうかを判定する関数
+static int
+is_non_english_word(const char *word) {
+  if (word == NULL || strlen(word) == 0) {
+    return 0; // 空文字列は判定不能
+  }
+
+  // 化学式らしい場合は非英単語として検出しない
+  if (is_chemical_formula(word)) {
+    // printf("DEBUG: %s - 化学式と判定\n", word);
+    return 0;
+  }
+
+  // 英語文字の一般的な頻度（小文字）
+  const double eng_freq[26] = {
+    0.08167, 0.01492, 0.02802, 0.04271, 0.12702, // a-e
+    0.02228, 0.02015, 0.06094, 0.06966, 0.00153, // f-j
+    0.00772, 0.04025, 0.02406, 0.06749, 0.07507, // k-o
+    0.01929, 0.00095, 0.05987, 0.06327, 0.09056, // p-t
+    0.02758, 0.00978, 0.02360, 0.00150, 0.01974, // u-y
+    0.00074  // z
+  };
+
+  int len = strlen(word);
+  if (len < 8) {
+    return 0; // 7文字以下は判定保留（より保守的に）
+  }
+
+  // 文字数カウント
+  int char_count[26] = {0};
+  int valid_chars = 0;
+  int vowel_count = 0;
+  int consecutive_consonants = 0;
+  int max_consecutive_consonants = 0;
+
+  // 文字頻度と母音/子音の集計
+  for (int i = 0; i < len; i++) {
+    char c = tolower(word[i]);
+    if (c >= 'a' && c <= 'z') {
+      char_count[c - 'a']++;
+      valid_chars++;
+
+      // 母音判定
+      if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u') {
+        vowel_count++;
+        consecutive_consonants = 0;
+      } else {
+        consecutive_consonants++;
+        if (consecutive_consonants > max_consecutive_consonants) {
+          max_consecutive_consonants = consecutive_consonants;
+        }
+      }
+    }
+  }
+
+  // 有効な文字がなければ判定不能
+  if (valid_chars == 0) {
+    return 0;
+  }
+
+  // 判定条件を調整
+  double vowel_ratio = (double)vowel_count / valid_chars;
+  double freq_score = 0.0;
+
+  for (int i = 0; i < 26; i++) {
+    double observed_freq = (double)char_count[i] / valid_chars;
+    double expected_freq = eng_freq[i];
+    freq_score += (observed_freq - expected_freq) * (observed_freq - expected_freq);
+  }
+
+  // デバッグ情報
+  // printf("DEBUG: %s - 母音比率: %.2f, 最大連続子音: %d, 頻度スコア: %.2f\n",
+          // word, vowel_ratio, max_consecutive_consonants, freq_score);
+
+  // スペースを含む場合は複数の英単語として扱い、非英単語とは判定しない
+  if (strchr(word, ' ') != NULL) {
+    return 0;
+  }
+
+  // 判定条件（より保守的なOR条件）
+  // 1. 子音の連続が非常に多い（7以上）
+  if (max_consecutive_consonants >= 7) {
+    return 1;
+  }
+
+  // 2. 母音比率が低く（15%未満）、子音の連続がやや多い（5以上）
+  if (vowel_ratio < 0.15 && max_consecutive_consonants >= 5) {
+    return 1;
+  }
+
+  // 3. 母音比率が非常に低い（5%未満）
+  if (vowel_ratio < 0.05) {
+    return 1;
+  }
+
+  // 4. 文字頻度が英語と大きく異なる（0.4以上）
+  if (freq_score > 0.40) {
+    return 1;
+  }
+
+  // いずれの条件も満たさない場合は英単語の可能性あり
+  return 0;
+}
+
 
 typedef struct {
   grn_tokenizer_token token;
@@ -747,6 +913,7 @@ typedef struct {
   grn_obj value;
   grn_bool remove_html;
   grn_bool remove_eos;
+  grn_bool remove_non_en;
 } grn_remove_word_token_filter;
 
 static void *
@@ -794,6 +961,14 @@ remove_word_init(grn_ctx *ctx, GNUC_UNUSED grn_obj *table, GNUC_UNUSED grn_token
     id = grn_table_get(ctx, token_filter->table, REMOVE_WORD_EOS_TAG, strlen(REMOVE_WORD_EOS_TAG));
     if (id) {
       token_filter->remove_eos = GRN_TRUE;
+    }
+  }
+  token_filter->remove_non_en = GRN_FALSE;
+  {
+    grn_id id;
+    id = grn_table_get(ctx, token_filter->table, REMOVE_WORD_NON_ENGLISH_TAG, strlen(REMOVE_WORD_NON_ENGLISH_TAG));
+    if (id) {
+      token_filter->remove_non_en = GRN_TRUE;
     }
   }
   GRN_TEXT_INIT(&(token_filter->value), 0);
@@ -887,6 +1062,19 @@ remove_word_filter(grn_ctx *ctx,
     const char *rest = GRN_TEXT_VALUE(data);
 
     if (rest_length >= 4 && (strncmp(rest, "EOS ", 4) == 0 || strncmp(rest, "eos ", 4) == 0)) {
+      status |= GRN_TOKEN_SKIP;
+    }
+  }
+
+  if (token_filter->remove_non_en) {
+    int char_length;
+    int rest_length = GRN_TEXT_LEN(data);
+    const char *rest = GRN_TEXT_VALUE(data);
+    char buf[256];
+    int copy_len = rest_length < 255 ? rest_length : 255;
+    memcpy(buf, rest, copy_len);
+    buf[copy_len] = '\0';
+    if (is_alpha_only(buf) && is_non_english_word(buf)) {
       status |= GRN_TOKEN_SKIP;
     }
   }

@@ -1,0 +1,11 @@
+register token_filters/yatof
+
+table_create remove_words TABLE_HASH_KEY ShortText
+load --table remove_words
+[
+{"_key": "<remove_non_en>"}
+]
+
+tokenize TokenDelimit "EOS こんにちは SEARCH AHWTVXAAGWNDKGG 123AHWUF" \
+  --normalizer NormalizerAuto \
+  --token_filters TokenFilterRemoveWord

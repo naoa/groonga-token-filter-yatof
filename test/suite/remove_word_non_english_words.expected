@@ -1,0 +1,43 @@
+register token_filters/yatof
+[[0,0.0,0.0],true]
+table_create remove_words TABLE_HASH_KEY ShortText
+[[0,0.0,0.0],true]
+load --table remove_words
+[
+{"_key": "<remove_non_en>"}
+]
+[[0,0.0,0.0],1]
+tokenize TokenDelimit "EOS こんにちは SEARCH AHWTVXAAGWNDKGG 123AHWUF"   --normalizer NormalizerAuto   --token_filters TokenFilterRemoveWord
+[
+  [
+    0,
+    0.0,
+    0.0
+  ],
+  [
+    {
+      "value": "eos",
+      "position": 0,
+      "force_prefix": false,
+      "force_prefix_search": false
+    },
+    {
+      "value": "こんにちは",
+      "position": 1,
+      "force_prefix": false,
+      "force_prefix_search": false
+    },
+    {
+      "value": "search",
+      "position": 2,
+      "force_prefix": false,
+      "force_prefix_search": false
+    },
+    {
+      "value": "123ahwuf",
+      "position": 4,
+      "force_prefix": false,
+      "force_prefix_search": false
+    }
+  ]
+]
