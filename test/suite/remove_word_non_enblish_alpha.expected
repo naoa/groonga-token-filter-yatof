@@ -1,0 +1,5 @@
+register token_filters/yatof
+
+tokenize TokenDelimit "EOS こんにちは SEARCH AHWTVXAAGWNDKGG CH2OCH ZH 123AHWUF HOGEHUGA ALALEULYSPROTRPILETHRARGGLNASNPHESERARGCYSLEUGLULEUGLNCYSGLN" \
+  --normalizer NormalizerAuto \
+  --token_filters TokenFilterSkipNonEnglishAlpha

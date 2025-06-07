@@ -1105,6 +1105,68 @@ remove_word_fin(grn_ctx *ctx, void *user_data)
   GRN_PLUGIN_FREE(ctx, token_filter);
 }
 
+typedef struct {
+  grn_tokenizer_token token;
+  grn_obj value;
+} grn_remove_non_english_token_filter;
+
+static void *
+remove_non_english_init(grn_ctx *ctx, GNUC_UNUSED grn_obj *table, GNUC_UNUSED grn_token_mode mode)
+{
+  grn_remove_non_english_token_filter *token_filter;
+  const char *remove_word_table_name_env;
+
+  token_filter = GRN_PLUGIN_MALLOC(ctx, sizeof(grn_remove_non_english_token_filter));
+  if (!token_filter) {
+    GRN_PLUGIN_ERROR(ctx, GRN_NO_MEMORY_AVAILABLE,
+                     "[token-filter][remove-non-english] "
+                     "failed to allocate grn_remove_non_english_token_filter");
+    return NULL;
+  }
+  GRN_TEXT_INIT(&(token_filter->value), 0);
+
+  grn_tokenizer_token_init(ctx, &(token_filter->token));
+
+  return token_filter;
+}
+
+static void
+remove_non_english_filter(grn_ctx *ctx,
+                          grn_token *current_token,
+                          grn_token *next_token,
+                          void *user_data)
+{
+  grn_remove_non_english_token_filter *token_filter = user_data;
+  grn_obj *data;
+  grn_tokenizer_status status;
+  data = grn_token_get_data(ctx, current_token);
+
+  status = grn_token_get_status(ctx, current_token);
+
+  {
+    GRN_BULK_REWIND(&(token_filter->value));
+    GRN_TEXT_SET(ctx, &(token_filter->value), GRN_TEXT_VALUE(data), GRN_TEXT_LEN(data));
+    GRN_TEXT_PUTC(ctx, &(token_filter->value), '\0');
+    if (is_alpha_only(GRN_TEXT_VALUE(&(token_filter->value))) && is_non_english_word(GRN_TEXT_VALUE(&(token_filter->value)))) {
+      status |= GRN_TOKEN_SKIP_WITH_POSITION;
+    }
+  }
+
+  grn_token_set_status(ctx, next_token, status);
+}
+
+static void
+remove_non_english_fin(grn_ctx *ctx, void *user_data)
+{
+  grn_remove_non_english_token_filter *token_filter = user_data;
+  if (!token_filter) {
+    return;
+  }
+  grn_obj_close(ctx, &(token_filter->value));
+  grn_tokenizer_token_fin(ctx, &(token_filter->token));
+  GRN_PLUGIN_FREE(ctx, token_filter);
+}
+
 #define THROUGH_WORD_TABLE_NAME "through_words"
 
 typedef struct {
@@ -1468,6 +1530,12 @@ GRN_PLUGIN_REGISTER(grn_ctx *ctx)
                                  yatof_init,
                                  atgc_filter,
                                  yatof_fin);
+
+  rc = grn_token_filter_register(ctx,
+                                 "TokenFilterSkipNonEnglishAlpha", -1,
+                                 remove_non_english_init,
+                                 remove_non_english_filter,
+                                 remove_non_english_fin);
 
   return rc;
 }

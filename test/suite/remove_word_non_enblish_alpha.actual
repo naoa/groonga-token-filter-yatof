@@ -1,0 +1,54 @@
+register token_filters/yatof
+[[0,0.0,0.0],true]
+tokenize TokenDelimit "EOS こんにちは SEARCH AHWTVXAAGWNDKGG CH2OCH ZH 123AHWUF HOGEHUGA ALALEULYSPROTRPILETHRARGGLNASNPHESERARGCYSLEUGLULEUGLNCYSGLN"   --normalizer NormalizerAuto   --token_filters TokenFilterSkipNonEnglishAlpha
+[
+  [
+    0,
+    0.0,
+    0.0
+  ],
+  [
+    {
+      "value": "eos",
+      "position": 0,
+      "force_prefix": false,
+      "force_prefix_search": false
+    },
+    {
+      "value": "こんにちは",
+      "position": 1,
+      "force_prefix": false,
+      "force_prefix_search": false
+    },
+    {
+      "value": "search",
+      "position": 2,
+      "force_prefix": false,
+      "force_prefix_search": false
+    },
+    {
+      "value": "ch2och",
+      "position": 3,
+      "force_prefix": false,
+      "force_prefix_search": false
+    },
+    {
+      "value": "zh",
+      "position": 4,
+      "force_prefix": false,
+      "force_prefix_search": false
+    },
+    {
+      "value": "123ahwuf",
+      "position": 5,
+      "force_prefix": false,
+      "force_prefix_search": false
+    },
+    {
+      "value": "hogehuga",
+      "position": 6,
+      "force_prefix": false,
+      "force_prefix_search": false
+    }
+  ]
+]
